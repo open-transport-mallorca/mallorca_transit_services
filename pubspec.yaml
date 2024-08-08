@@ -1,0 +1,28 @@
+name: mallorca_transit_services
+description: An unofficial, public API to access Mallorca's transportation services
+version: 1.0.0
+repository: https://github.com/open-transport-mallorca/mallorca_transit_services
+issue_tracker: https://github.com/open-transport-mallorca/mallorca_transit_services/issues
+
+environment:
+  sdk: ^3.0.0
+
+dependencies:
+  dart_rss: ^3.0.3
+  html: ^0.15.4
+  http: ^1.2.1
+  latlong2: ^0.9.1
+  web_socket_channel: ^2.4.5
+  xml: ^6.5.0
+
+dev_dependencies:
+  lints: ^3.0.0
+  test: ^1.24.0
+
+platforms:
+  android:
+  ios:
+  linux:
+  macos:
+  windows:
+  # Not available on web due to CORS restrictions
