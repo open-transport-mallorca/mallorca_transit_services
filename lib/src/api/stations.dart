@@ -80,6 +80,24 @@ class Station {
     }
   }
 
+  /// Connects to the API and returns the station with the given [id].
+  /// The [id] is the ID of the station.
+  /// The API returns a JSON response that is decoded and converted to a [Station].
+  /// If the station is not found, an exception is thrown.
+  static Future<Station> fromId(int id) async {
+    final url = Uri.parse("https://ws.tib.org/sictmws-rest/stops/ctmr4/$id");
+
+    try {
+      Uint8List responseBytes =
+          await httpClient.get(url).then((value) => value.bodyBytes);
+
+      return Station.fromJson(json.decode(utf8.decode(responseBytes)));
+    } catch (e) {
+      throw Exception(
+          "There was an error fetching the station. 😕 Please try again later.");
+    }
+  }
+
   /// Connects to the API and returns the list of stations.
   /// The [count] is the number of stations to return.
   /// The default value is -1, which returns all stations.

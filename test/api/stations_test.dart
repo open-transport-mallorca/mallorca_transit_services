@@ -80,6 +80,46 @@ void main() {
       );
     });
 
+    // Test fromId method for successful response
+    test('fromId should return a Station for a valid id', () async {
+      final mockClient = MockClient((request) async {
+        final stationResponse = jsonEncode({
+          'cod': '123',
+          'id': 456,
+          'lat': 37.7749,
+          'lon': -122.4194,
+          'nam': 'Sample Station',
+          'ref': 'Reference'
+        });
+
+        return http.Response(stationResponse, 200);
+      });
+
+      Station.httpClient = mockClient;
+
+      final station = await Station.fromId(456);
+      expect(station.code, 123);
+      expect(station.id, 456);
+      expect(station.lat, 37.7749);
+      expect(station.long, -122.4194);
+      expect(station.name, 'Sample Station');
+      expect(station.ref, 'Reference');
+    });
+
+    // Test fromId method for invalid id
+    test('fromId should throw an exception for invalid id', () async {
+      final mockClient = MockClient((request) async {
+        return http.Response('Station not found', 404);
+      });
+
+      Station.httpClient = mockClient;
+
+      expect(
+        () async => await Station.fromId(999),
+        throwsA(isA<Exception>()),
+      );
+    });
+
     // Test getAllStations method for successful response
     test('getAllStations should return a list of Stations', () async {
       final mockClient = MockClient((request) async {

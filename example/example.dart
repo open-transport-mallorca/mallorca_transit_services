@@ -8,6 +8,10 @@ void main() async {
   final List<Station> stations = await Station.getAllStations();
   print(stations);
 
+  // Get a specific station by its ID
+  final station = await Station.fromId(51030);
+  print(station);
+
   // Get the departures info of the first station
   // Limit to 5 departures
   List<Departure> departures =
