@@ -55,16 +55,18 @@ class RealTrip {
   double lat;
   double long;
   int id;
+  RealTripBusStats stats;
 
   RealTrip(
       {this.estimatedArrival,
       required this.lat,
       required this.long,
-      required this.id});
+      required this.id,
+      required this.stats});
 
   @override
   toString() {
-    return 'RealTrip{estimatedArrival: $estimatedArrival, lat: $lat, long: $long}';
+    return 'RealTrip{estimatedArrival: $estimatedArrival, lat: $lat, long: $long, stats: $stats, id: $id}';
   }
 
   /// Converts a JSON map to a [RealTrip] object.
@@ -77,7 +79,8 @@ class RealTrip {
             json['aet'] != null ? DateTime.tryParse(json['aet']) : null,
         lat: json['lastCoords']['lat'],
         long: json['lastCoords']['lng'],
-        id: int.parse(json['id']));
+        id: int.parse(json['id']),
+        stats: RealTripBusStats.fromJson(json['bus']));
   }
 
   /// Converts a [RealTrip] object to a JSON map.
@@ -85,8 +88,50 @@ class RealTrip {
     return jsonEncode({
       'aet': realTrip.estimatedArrival?.toIso8601String(),
       'lastCoords': {'lat': realTrip.lat, 'lng': realTrip.long},
-      'id': realTrip.id
+      'id': realTrip.id,
+      'bus': RealTripBusStats.toJson(realTrip.stats)
     });
+  }
+}
+
+class RealTripBusStats {
+  /// Total number of places to sit in the bus (counting occupied and free)
+  int placesToSit;
+
+  /// Total number of places to stand in the bus (counting occupied and free)
+  int placesToStand;
+
+  /// Total number of passengers currently in the bus
+  int passengers;
+
+  RealTripBusStats(
+      {required this.placesToSit,
+      required this.placesToStand,
+      required this.passengers});
+
+  @override
+  String toString() {
+    return 'RealTripBusStats{placesToSit: $placesToSit, placesToStand: $placesToStand, passengers: $passengers}';
+  }
+
+  /// Converts a JSON map to a [RealTripBusStats] object.
+  /// The [json] parameter is a map representing the JSON data.
+  /// Returns a [RealTripBusStats] object with the converted data.
+  factory RealTripBusStats.fromJson(Map json) {
+    return RealTripBusStats(
+        placesToSit: json['placesSeated'],
+        placesToStand: json['placesStanding'],
+        passengers: json['passengers']);
+  }
+
+  /// Converts a [RealTripBusStats] object to a JSON map.
+  /// returning a map representing the JSON data.
+  static Map toJson(RealTripBusStats realTripBusStats) {
+    return {
+      'placesSeated': realTripBusStats.placesToSit,
+      'placesStanding': realTripBusStats.placesToStand,
+      'passengers': realTripBusStats.passengers
+    };
   }
 }
 

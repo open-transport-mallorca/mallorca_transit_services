@@ -81,7 +81,8 @@ void main() {
       final jsonMap = {
         'aet': '2024-05-24T08:30:00Z',
         'lastCoords': {'lat': 40.712776, 'lng': -74.005974},
-        'id': '1'
+        'id': '1',
+        'bus': {'passengers': 10, 'placesSeated': 20, 'placesStanding': 30}
       };
 
       final realTrip = RealTrip.fromJson(jsonMap);
@@ -90,13 +91,17 @@ void main() {
       expect(realTrip.lat, 40.712776);
       expect(realTrip.long, -74.005974);
       expect(realTrip.id, 1);
+      expect(realTrip.stats.passengers, 10);
+      expect(realTrip.stats.placesToSit, 20);
+      expect(realTrip.stats.placesToStand, 30);
     });
 
     test('fromJson handles null estimatedArrival', () {
       final jsonMap = {
         'aet': null,
         'lastCoords': {'lat': 40.712776, 'lng': -74.005974},
-        'id': '2'
+        'id': '2',
+        'bus': {'passengers': 10, 'placesSeated': 20, 'placesStanding': 30}
       };
 
       final realTrip = RealTrip.fromJson(jsonMap);
@@ -112,7 +117,9 @@ void main() {
           estimatedArrival: DateTime.parse('2024-05-24T08:30:00Z'),
           lat: 40.712776,
           long: -74.005974,
-          id: 1);
+          id: 1,
+          stats: RealTripBusStats(
+              passengers: 10, placesToSit: 20, placesToStand: 30));
 
       final jsonString = RealTrip.toJson(realTrip);
       final jsonMap = jsonDecode(jsonString);
@@ -121,11 +128,19 @@ void main() {
       expect(jsonMap['lastCoords']['lat'], 40.712776);
       expect(jsonMap['lastCoords']['lng'], -74.005974);
       expect(jsonMap['id'], 1);
+      expect(jsonMap['bus']['passengers'], 10);
+      expect(jsonMap['bus']['placesSeated'], 20);
+      expect(jsonMap['bus']['placesStanding'], 30);
     });
 
     test('toJson handles null estimatedArrival', () {
       final realTrip = RealTrip(
-          estimatedArrival: null, lat: 40.712776, long: -74.005974, id: 2);
+          estimatedArrival: null,
+          lat: 40.712776,
+          long: -74.005974,
+          id: 2,
+          stats: RealTripBusStats(
+              passengers: 10, placesToSit: 20, placesToStand: 30));
 
       final jsonString = RealTrip.toJson(realTrip);
       final jsonMap = jsonDecode(jsonString);
@@ -134,6 +149,9 @@ void main() {
       expect(jsonMap['lastCoords']['lat'], 40.712776);
       expect(jsonMap['lastCoords']['lng'], -74.005974);
       expect(jsonMap['id'], 2);
+      expect(jsonMap['bus']['passengers'], 10);
+      expect(jsonMap['bus']['placesSeated'], 20);
+      expect(jsonMap['bus']['placesStanding'], 30);
     });
   });
 
@@ -147,7 +165,8 @@ void main() {
         'realTrip': {
           'aet': '2024-05-24T09:00:00Z',
           'lastCoords': {'lat': 40.712776, 'lng': -74.005974},
-          'id': '1'
+          'id': '1',
+          'bus': {'passengers': 10, 'placesSeated': 20, 'placesStanding': 30}
         },
         'dem': true,
         'lcod': 'B42',
@@ -163,6 +182,14 @@ void main() {
       expect(departure.name, 'Bus 42');
       expect(departure.tripId, 1);
       expect(departure.realTrip, isA<RealTrip>());
+      expect(departure.realTrip!.estimatedArrival,
+          DateTime.parse('2024-05-24T09:00:00Z'));
+      expect(departure.realTrip!.lat, 40.712776);
+      expect(departure.realTrip!.long, -74.005974);
+      expect(departure.realTrip!.id, 1);
+      expect(departure.realTrip!.stats.passengers, 10);
+      expect(departure.realTrip!.stats.placesToSit, 20);
+      expect(departure.realTrip!.stats.placesToStand, 30);
       expect(departure.delayed, true);
       expect(departure.lineCode, 'B42');
       expect(departure.destination, 'Central Station');
@@ -201,7 +228,9 @@ void main() {
           estimatedArrival: DateTime.parse('2024-05-24T09:00:00Z'),
           lat: 40.712776,
           long: -74.005974,
-          id: 1);
+          id: 1,
+          stats: RealTripBusStats(
+              passengers: 10, placesToSit: 20, placesToStand: 30));
       final departure = Departure(
           departureTime: DateTime.parse('2024-05-24T08:30:00Z'),
           estimatedArrival: DateTime.parse('2024-05-24T09:00:00Z'),
