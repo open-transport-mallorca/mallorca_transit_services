@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.1.1
+
+- Made `RealTripBusStats` optional in `Departure` because of endpoint changes
+
 ## 1.1.0
 
 - Added `RealTripBusStats` to `Departure`

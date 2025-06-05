@@ -55,14 +55,14 @@ class RealTrip {
   double lat;
   double long;
   int id;
-  RealTripBusStats stats;
+  RealTripBusStats? stats;
 
   RealTrip(
       {this.estimatedArrival,
       required this.lat,
       required this.long,
       required this.id,
-      required this.stats});
+      this.stats});
 
   @override
   toString() {
@@ -80,16 +80,21 @@ class RealTrip {
         lat: json['lastCoords']['lat'],
         long: json['lastCoords']['lng'],
         id: int.parse(json['id']),
-        stats: RealTripBusStats.fromJson(json['bus']));
+        stats: json['bus'] != null
+            ? RealTripBusStats.fromJson(json['bus'])
+            : null);
   }
 
   /// Converts a [RealTrip] object to a JSON map.
   static String toJson(RealTrip realTrip) {
     return jsonEncode({
+      'estimatedArrival': realTrip.estimatedArrival?.toIso8601String(),
       'aet': realTrip.estimatedArrival?.toIso8601String(),
       'lastCoords': {'lat': realTrip.lat, 'lng': realTrip.long},
       'id': realTrip.id,
-      'bus': RealTripBusStats.toJson(realTrip.stats)
+      'bus': realTrip.stats != null
+          ? RealTripBusStats.toJson(realTrip.stats!)
+          : null
     });
   }
 }

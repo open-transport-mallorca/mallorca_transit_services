@@ -91,9 +91,9 @@ void main() {
       expect(realTrip.lat, 40.712776);
       expect(realTrip.long, -74.005974);
       expect(realTrip.id, 1);
-      expect(realTrip.stats.passengers, 10);
-      expect(realTrip.stats.placesToSit, 20);
-      expect(realTrip.stats.placesToStand, 30);
+      expect(realTrip.stats?.passengers, 10);
+      expect(realTrip.stats?.placesToSit, 20);
+      expect(realTrip.stats?.placesToStand, 30);
     });
 
     test('fromJson handles null estimatedArrival', () {
@@ -187,9 +187,9 @@ void main() {
       expect(departure.realTrip!.lat, 40.712776);
       expect(departure.realTrip!.long, -74.005974);
       expect(departure.realTrip!.id, 1);
-      expect(departure.realTrip!.stats.passengers, 10);
-      expect(departure.realTrip!.stats.placesToSit, 20);
-      expect(departure.realTrip!.stats.placesToStand, 30);
+      expect(departure.realTrip!.stats?.passengers, 10);
+      expect(departure.realTrip!.stats?.placesToSit, 20);
+      expect(departure.realTrip!.stats?.placesToStand, 30);
       expect(departure.delayed, true);
       expect(departure.lineCode, 'B42');
       expect(departure.destination, 'Central Station');
