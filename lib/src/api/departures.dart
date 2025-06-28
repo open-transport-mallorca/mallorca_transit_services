@@ -1,5 +1,3 @@
-// ignore_for_file: non_constant_identifier_names, unused_element
-
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:http/http.dart';

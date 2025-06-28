@@ -5,7 +5,7 @@ import 'package:mallorca_transit_services/src/messaging/transit_rss.dart';
 
 void main() async {
   // Get the list of stations
-  final List<Station> stations = await Station.getAllStations();
+  final stations = await Station.getAllStations();
   print(stations);
 
   // Get a specific station by its ID
@@ -14,12 +14,12 @@ void main() async {
 
   // Get the departures info of the first station
   // Limit to 5 departures
-  List<Departure> departures =
+  final departures =
       await Departures.getDepartures(stationCode: 51030, numberOfDepartures: 5);
   print(departures);
 
   // Get the list of lines that pass through the first station
-  List<RouteLine> lines = await Station.getLines(stations.first.code);
+  final lines = await Station.getLines(stations.first.code);
   print(lines);
 
   // Get the list of all lines
