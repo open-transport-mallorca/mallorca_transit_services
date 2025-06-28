@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## 1.2.1
+
+- Made `locationStream` syncronous and renamed it to `locationChannel` for clarity.
+- `locationStream` is still available as a method that returns the stream.
+
+## 1.2.0
+
+BREAKING CHANGE
+
+- Changed `locationStream` to return a `WebSocketChannel` instead of a `Stream`. This allows for more flexibility in handling the WebSocket connection.
+
 ## 1.1.1
 
 - Made `RealTripBusStats` optional in `Departure` because of endpoint changes

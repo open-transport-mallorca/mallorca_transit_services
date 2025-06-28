@@ -10,13 +10,17 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 /// The location socket provides real-time information about the buses on a
 /// route.
 class LocationWebSocket {
-  /// Connects to the location socket and returns the stream of messages.
+  /// Connects to the location websocket and returns the `WebSocketChannel`.
   ///
   /// The [id] is the ID of the route.
-  static Future<Stream> locationStream(int id) async {
+  static WebSocketChannel locationChannel(int id) {
     final url = Uri.parse("wss://sae.tib.org/saews/public-events/$id");
     final channel = WebSocketChannel.connect(url);
-    return channel.stream;
+    return channel;
+  }
+
+  static Stream locationStream(int id) {
+    return locationChannel(id).stream;
   }
 
   /// Parses the JSON message from the location socket and returns the
