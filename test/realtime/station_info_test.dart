@@ -38,11 +38,11 @@ void main() {
       expect(stationOnRoute1.scheduledArrival.hour, 8);
       expect(stationOnRoute1.scheduledArrival.minute, 30);
       expect(stationOnRoute1.estimatedDistance, 2.5);
-      expect(stationOnRoute1.estimatedArrival.year, 2024);
-      expect(stationOnRoute1.estimatedArrival.month, 5);
-      expect(stationOnRoute1.estimatedArrival.day, 25);
-      expect(stationOnRoute1.estimatedArrival.hour, 8);
-      expect(stationOnRoute1.estimatedArrival.minute, 35);
+      expect(stationOnRoute1.estimatedArrival?.year, 2024);
+      expect(stationOnRoute1.estimatedArrival?.month, 5);
+      expect(stationOnRoute1.estimatedArrival?.day, 25);
+      expect(stationOnRoute1.estimatedArrival?.hour, 8);
+      expect(stationOnRoute1.estimatedArrival?.minute, 35);
 
       final stationOnRoute2 = routeStationInfo.stops[1];
       expect(stationOnRoute2.stopId, 2);
@@ -50,11 +50,11 @@ void main() {
       expect(stationOnRoute2.scheduledArrival.hour, 9);
       expect(stationOnRoute2.scheduledArrival.minute, 0);
       expect(stationOnRoute2.estimatedDistance, 4.2);
-      expect(stationOnRoute2.estimatedArrival.year, 2024);
-      expect(stationOnRoute2.estimatedArrival.month, 5);
-      expect(stationOnRoute2.estimatedArrival.day, 25);
-      expect(stationOnRoute2.estimatedArrival.hour, 9);
-      expect(stationOnRoute2.estimatedArrival.minute, 5);
+      expect(stationOnRoute2.estimatedArrival?.year, 2024);
+      expect(stationOnRoute2.estimatedArrival?.month, 5);
+      expect(stationOnRoute2.estimatedArrival?.day, 25);
+      expect(stationOnRoute2.estimatedArrival?.hour, 9);
+      expect(stationOnRoute2.estimatedArrival?.minute, 5);
     });
 
     test('fromJson should handle empty stops array', () {
@@ -91,11 +91,29 @@ void main() {
       expect(stationOnRoute.scheduledArrival.hour, 8);
       expect(stationOnRoute.scheduledArrival.minute, 30);
       expect(stationOnRoute.estimatedDistance, 2.5);
-      expect(stationOnRoute.estimatedArrival.year, 2024);
-      expect(stationOnRoute.estimatedArrival.month, 5);
-      expect(stationOnRoute.estimatedArrival.day, 25);
-      expect(stationOnRoute.estimatedArrival.hour, 8);
-      expect(stationOnRoute.estimatedArrival.minute, 35);
+      expect(stationOnRoute.estimatedArrival?.year, 2024);
+      expect(stationOnRoute.estimatedArrival?.month, 5);
+      expect(stationOnRoute.estimatedArrival?.day, 25);
+      expect(stationOnRoute.estimatedArrival?.hour, 8);
+      expect(stationOnRoute.estimatedArrival?.minute, 35);
     });
+  });
+
+  test('fromJson should handle missing optional fields', () {
+    final json = {
+      'stop_id': 1,
+      'stop_nam': 'Station A',
+      'arr_t': '0830' // Scheduled arrival time in HHMM format
+      // Missing estimated distance and estimated arrival time
+    };
+
+    final stationOnRoute = StationOnRoute.fromJson(json);
+
+    expect(stationOnRoute.stopId, 1);
+    expect(stationOnRoute.stopName, 'Station A');
+    expect(stationOnRoute.scheduledArrival.hour, 8);
+    expect(stationOnRoute.scheduledArrival.minute, 30);
+    expect(stationOnRoute.estimatedDistance, isNull);
+    expect(stationOnRoute.estimatedArrival, isNull);
   });
 }

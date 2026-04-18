@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 1.3.0
+
+- Made `estimatedDistance` and `estimatedArrival` optional in `StationOnRoute` to handle cases where this information is not available.
+- Added location stream to example
+
 ## 1.2.1
 
 - Made `locationStream` syncronous and renamed it to `locationChannel` for clarity.

@@ -33,15 +33,15 @@ class StationOnRoute {
   int stopId;
   String stopName;
   DateTime scheduledArrival;
-  double estimatedDistance;
-  DateTime estimatedArrival;
+  double? estimatedDistance;
+  DateTime? estimatedArrival;
 
   StationOnRoute(
       {required this.stopId,
       required this.stopName,
       required this.scheduledArrival,
-      required this.estimatedDistance,
-      required this.estimatedArrival});
+      this.estimatedDistance,
+      this.estimatedArrival});
 
   @override
   String toString() {
@@ -62,7 +62,9 @@ class StationOnRoute {
             int.parse(json["arr_t"].substring(0, 2)),
             int.parse(json["arr_t"].substring(2, 4))),
         estimatedDistance: json['esta_dist'],
-        estimatedArrival: DateTime.parse(json['esta_time']));
+        estimatedArrival: json['esta_time'] == null
+            ? null
+            : DateTime.tryParse(json['esta_time']));
   }
 }
 
