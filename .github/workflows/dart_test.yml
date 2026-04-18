@@ -16,14 +16,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dart-lang/setup-dart@v1
 
-      - name: Format code
-        run: dart format --set-exit-if-changed .
-
       - name: Get dependencies
         run: dart pub get
 
-      - name: Run tests
-        run: dart test
+      - name: Format code
+        run: dart format --set-exit-if-changed .
 
       - name: Analyze code
         run: dart analyze
+
+      - name: Run tests
+        run: dart test
