@@ -1,7 +1,5 @@
-import 'package:mallorca_transit_services/src/api/departures.dart';
-import 'package:mallorca_transit_services/src/api/route_line.dart';
-import 'package:mallorca_transit_services/src/api/stations.dart';
-import 'package:mallorca_transit_services/src/messaging/transit_rss.dart';
+import 'dart:convert';
+import 'package:mallorca_transit_services/mallorca_transit_services.dart';
 
 void main() async {
   // Get the list of stations
@@ -46,4 +44,30 @@ void main() async {
   // Get the link to the PDF Timetable of line A42
   final timetablePdf = await RouteLine.getPdfTimetable('A42');
   print(timetablePdf);
+
+  // Listen to real-time bus updates
+  final realTripId = departures
+      .firstWhere((departure) => departure.realTrip != null)
+      .realTrip
+      ?.id; // For example, take the first departure that has tracking info
+
+  if (realTripId == null) {
+    print("No real-time trip information available.");
+    return;
+  }
+  final locationStream = LocationWebSocket.locationStream(realTripId);
+  print("Listening to real-time bus updates for trip ID: $realTripId");
+  locationStream.listen(
+    (message) {
+      final decoded = jsonDecode(message);
+      final parsedMessage = LocationWebSocket.locationParser(decoded);
+      print(parsedMessage);
+    },
+    onError: (error) {
+      print("WebSocket error: $error");
+    },
+    onDone: () {
+      print("WebSocket closed");
+    },
+  );
 }
