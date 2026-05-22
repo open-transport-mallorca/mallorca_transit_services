@@ -12,8 +12,8 @@ void main() async {
 
   // Get the departures info of the first station
   // Limit to 5 departures
-  final departures =
-      await DeparturesApi.getDepartures(stationCode: 51030, numberOfDepartures: 5);
+  final departures = await DeparturesApi.getDepartures(
+      stationCode: 51030, numberOfDepartures: 5);
   print(departures);
 
   // Get the list of lines that pass through the first station
