@@ -1,18 +1,11 @@
-import 'package:mallorca_transit_services/src/realtime/bus_position.dart';
-import 'package:mallorca_transit_services/src/realtime/bus_stopped.dart';
-import 'package:mallorca_transit_services/src/realtime/connection_close.dart';
-import 'package:mallorca_transit_services/src/realtime/station_info.dart';
+import 'package:mallorca_transit_services/src/models/realtime/bus_position.dart';
+import 'package:mallorca_transit_services/src/models/realtime/bus_stopped.dart';
+import 'package:mallorca_transit_services/src/models/realtime/connection_close.dart';
+import 'package:mallorca_transit_services/src/models/realtime/station_info.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
-/// A class that connects to the location socket and returns the stream of
-/// messages.
-///
-/// The location socket provides real-time information about the buses on a
-/// route.
+/// WebSocket client for real-time bus tracking.
 class LocationWebSocket {
-  /// Connects to the location websocket and returns the `WebSocketChannel`.
-  ///
-  /// The [id] is the ID of the route.
   static WebSocketChannel locationChannel(int id) {
     final url = Uri.parse("wss://sae.tib.org/saews/public-events/$id");
     final channel = WebSocketChannel.connect(url);
@@ -23,14 +16,9 @@ class LocationWebSocket {
     return locationChannel(id).stream;
   }
 
-  /// Parses the JSON message from the location socket and returns the
-  /// appropriate object.
-  ///
-  /// The JSON message can be of three types:
-  /// - `position`: A bus position
-  /// - `esta-info`: Information about the stations on the route
-  /// - `stop`: A bus stopped and gives its relevant information
-  /// - `close`: The connection has been closed
+  /// Parses a WebSocket message into the appropriate model.
+  /// Types: `position` → [BusPosition], `esta-info` → [RouteStationInfo],
+  /// `stop` → [BusStopped], `close` → [ConnectionClose].
   static Object locationParser(Map json) {
     if (json["type"] == "position") {
       return BusPosition.fromJson(json);
@@ -41,8 +29,6 @@ class LocationWebSocket {
     } else if (json["type"] == "close") {
       return ConnectionClose();
     } else {
-      /// Throw error if the type received is unknown
-      /// because we don't know how to handle it
       throw UnimplementedError("Unknown type: ${json["type"]}");
     }
   }

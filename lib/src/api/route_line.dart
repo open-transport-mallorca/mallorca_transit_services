@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:http/http.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:mallorca_transit_services/src/api/stations.dart';
+import 'package:mallorca_transit_services/mallorca_transit_services.dart';
 import 'package:xml/xml.dart';
 
 enum Way { way, back }
