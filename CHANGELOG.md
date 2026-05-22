@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.4.0
+
+- Changed `getPdfTimetable` to use API instead of web scraping
+
 ## 1.3.0
 
 - Made `estimatedDistance` and `estimatedArrival` optional in `StationOnRoute` to handle cases where this information is not available.

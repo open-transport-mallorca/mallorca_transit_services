@@ -1,7 +1,5 @@
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:html/dom.dart';
-import 'package:html/parser.dart' show parse;
 import 'package:http/http.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:mallorca_transit_services/src/api/stations.dart';
@@ -54,15 +52,26 @@ class RouteLine {
     }
   }
 
-  static Future<Uri?> getPdfTimetable(String lineCode) async {
+  static Future<Uri?> getPdfTimetable(String lineCode, {int? lineId}) async {
     try {
-      final response = await httpClient.get(Uri.parse(
-          "https://www.tib.org/es/lineas-y-horarios/autobus/-/linia/$lineCode"));
-      final parser = parse(response.body);
-      Element div =
-          parser.getElementsByClassName('ctm-line-schedule-link').first;
-      String? href = div.querySelector('a')!.attributes['href'];
-      return href != null ? Uri.parse(href) : null;
+      if (lineId == null) {
+        final lineQuery = await httpClient.get(
+            Uri.parse("https://ws.tib.org/sictmws-rest/lines/ctmr4/$lineCode"));
+        lineId = json.decode(lineQuery.body)["id"];
+      }
+      final pdfQuery = await httpClient.get(Uri.parse(
+        "https://www.tib.org/o/manager/schedules/$lineId?groupId=20124",
+      ));
+
+      final List<dynamic> schedules = jsonDecode(pdfQuery.body);
+      final latest = schedules.reduce((a, b) {
+        final dateA = a["JSONObject"]["FechaDeInicioDeValidez"] as String;
+        final dateB = b["JSONObject"]["FechaDeInicioDeValidez"] as String;
+        return dateA.compareTo(dateB) >= 0 ? a : b;
+      });
+
+      final pdfPath = latest["JSONObject"]["urlScheduleFile"];
+      return Uri.parse("https://www.tib.org$pdfPath");
     } catch (e) {
       throw Exception('Failed to scrape Timetable PDF');
     }
