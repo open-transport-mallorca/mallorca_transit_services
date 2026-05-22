@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 2.0.0
+
+BREAKING CHANGE
+
+- Separated models from API logic. Pure data classes (`Departure`, `Station`, `RouteLine`, `Subline`, `RoutePath`) are now in `src/models/`. All network calls have moved to dedicated service classes:
+  - `DeparturesApi.getDepartures` (was `Departures.getDepartures`)
+  - `StationsApi.getAllStations`, `StationsApi.fromId`, `StationsApi.getLines` (were static methods on `Station`)
+  - `RouteLinesApi.getAllLines`, `RouteLinesApi.getLine`, `RouteLinesApi.getPdfTimetable`, `RouteLinesApi.getSublines`, `RouteLinesApi.getPath` (were static methods on `RouteLine`, `Subline`, and `RoutePath`)
+- Moved realtime models (`BusPosition`, `BusStopped`, `ConnectionClose`, `RouteStationInfo`) into `src/models/realtime/`
+
 ## 1.4.0
 
 - Changed `getPdfTimetable` to use API instead of web scraping

@@ -5,7 +5,7 @@ import 'package:http/testing.dart';
 import 'package:mallorca_transit_services/mallorca_transit_services.dart';
 
 void main() {
-  group('Departures.getDepartures', () {
+  group('DeparturesApi.getDepartures', () {
     test('returns list of departures when the API call is successful',
         () async {
       final mockHttpClient = MockClient((request) async {
@@ -39,9 +39,9 @@ void main() {
             200);
       });
 
-      Departures.httpClient = mockHttpClient;
+      DeparturesApi.httpClient = mockHttpClient;
 
-      final departures = await Departures.getDepartures(
+      final departures = await DeparturesApi.getDepartures(
           stationCode: 123, numberOfDepartures: 2);
 
       expect(departures, isA<List<Departure>>());
@@ -54,10 +54,10 @@ void main() {
         throw FormatException("Invalid format");
       });
 
-      Departures.httpClient = mockHttpClient;
+      DeparturesApi.httpClient = mockHttpClient;
 
       expect(
-          () async => await Departures.getDepartures(
+          () async => await DeparturesApi.getDepartures(
               stationCode: 123, numberOfDepartures: 2),
           throwsA(isA<FormatException>()));
     });
@@ -67,10 +67,10 @@ void main() {
         return http.Response('[]', 200);
       });
 
-      Departures.httpClient = mockHttpClient;
+      DeparturesApi.httpClient = mockHttpClient;
 
       expect(
-          () async => await Departures.getDepartures(
+          () async => await DeparturesApi.getDepartures(
               stationCode: 123, numberOfDepartures: 2),
           throwsA(isA<Exception>()));
     });

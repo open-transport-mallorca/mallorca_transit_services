@@ -2,8 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:test/test.dart';
-import 'package:mallorca_transit_services/src/api/route_line.dart';
-import 'package:mallorca_transit_services/src/api/stations.dart';
+import 'package:mallorca_transit_services/mallorca_transit_services.dart';
 
 void main() {
   group('Station', () {
@@ -57,10 +56,10 @@ void main() {
         return http.Response(routeLineResponse, 200);
       });
 
-      RouteLine.httpClient = mockRouteLineClient;
-      Station.httpClient = mockClient;
+      RouteLinesApi.httpClient = mockRouteLineClient;
+      StationsApi.httpClient = mockClient;
 
-      final lines = await Station.getLines(123);
+      final lines = await StationsApi.getLines(123);
       expect(lines.length, 2);
       expect(lines[0].name, 'Route Line 1');
     });
@@ -72,10 +71,10 @@ void main() {
         return http.Response('Invalid station code', 400);
       });
 
-      Station.httpClient = mockClient;
+      StationsApi.httpClient = mockClient;
 
       expect(
-        () async => await Station.getLines(999),
+        () async => await StationsApi.getLines(999),
         throwsA(isA<FormatException>()),
       );
     });
@@ -95,9 +94,9 @@ void main() {
         return http.Response(stationResponse, 200);
       });
 
-      Station.httpClient = mockClient;
+      StationsApi.httpClient = mockClient;
 
-      final station = await Station.fromId(456);
+      final station = await StationsApi.fromId(456);
       expect(station.code, 123);
       expect(station.id, 456);
       expect(station.lat, 37.7749);
@@ -112,10 +111,10 @@ void main() {
         return http.Response('Station not found', 404);
       });
 
-      Station.httpClient = mockClient;
+      StationsApi.httpClient = mockClient;
 
       expect(
-        () async => await Station.fromId(999),
+        () async => await StationsApi.fromId(999),
         throwsA(isA<Exception>()),
       );
     });
@@ -147,9 +146,9 @@ void main() {
         return http.Response(stationsResponse, 200);
       });
 
-      Station.httpClient = mockClient;
+      StationsApi.httpClient = mockClient;
 
-      final stations = await Station.getAllStations(count: 2);
+      final stations = await StationsApi.getAllStations(count: 2);
       expect(stations.length, 2);
       expect(stations[0].name, 'Station 1');
       expect(stations[1].name, 'Station 2');
@@ -161,10 +160,10 @@ void main() {
         return http.Response('Error fetching stations', 500);
       });
 
-      Station.httpClient = mockClient;
+      StationsApi.httpClient = mockClient;
 
       expect(
-        () async => await Station.getAllStations(),
+        () async => await StationsApi.getAllStations(),
         throwsA(isA<Exception>()),
       );
     });

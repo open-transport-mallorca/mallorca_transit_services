@@ -145,9 +145,9 @@ void main() {
         return http.Response(responsePayload, 200);
       });
 
-      RouteLine.httpClient = mockClient;
+      RouteLinesApi.httpClient = mockClient;
 
-      final lines = await RouteLine.getAllLines();
+      final lines = await RouteLinesApi.getAllLines();
 
       expect(lines, isNotEmpty);
       expect(lines[0].code, 'B42');
@@ -167,9 +167,9 @@ void main() {
         return http.Response(responsePayload, 200);
       });
 
-      RouteLine.httpClient = mockClient;
+      RouteLinesApi.httpClient = mockClient;
 
-      final line = await RouteLine.getLine('B42');
+      final line = await RouteLinesApi.getLine('B42');
 
       expect(line.code, 'B42');
     });
@@ -207,9 +207,9 @@ void main() {
         return http.Response('Not found', 404);
       });
 
-      RouteLine.httpClient = mockClient;
+      RouteLinesApi.httpClient = mockClient;
 
-      final pdfUri = await RouteLine.getPdfTimetable('B42');
+      final pdfUri = await RouteLinesApi.getPdfTimetable('B42');
 
       expect(pdfUri, isNotNull);
       expect(
