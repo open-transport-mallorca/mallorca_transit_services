@@ -174,14 +174,37 @@ void main() {
       expect(line.code, 'B42');
     });
 
-    test('getPdfTimetable fetches the PDF timetable URL', () async {
+    test('getPdfTimetable fetches the most recent PDF timetable URL', () async {
       final mockClient = MockClient((request) async {
-        final htmlResponse = '''
-        <div class="ctm-line-schedule-link">
-          <a href="https://www.tib.org/pdftimetable.pdf">Timetable PDF</a>
-        </div>
-        ''';
-        return http.Response(htmlResponse, 200);
+        if (request.url.host == 'ws.tib.org') {
+          return http.Response('{"id": 3066}', 200);
+        }
+
+        if (request.url.host == 'www.tib.org') {
+          final schedules = jsonEncode([
+            {
+              "JSONObject": {
+                "FechaDeInicioDeValidez": "2025-04-01",
+                "urlScheduleFile": "/documents/20124/old.pdf",
+              }
+            },
+            {
+              "JSONObject": {
+                "FechaDeInicioDeValidez": "2026-03-27",
+                "urlScheduleFile": "/documents/20124/latest.pdf",
+              }
+            },
+            {
+              "JSONObject": {
+                "FechaDeInicioDeValidez": "2025-11-01",
+                "urlScheduleFile": "/documents/20124/middle.pdf",
+              }
+            },
+          ]);
+          return http.Response(schedules, 200);
+        }
+
+        return http.Response('Not found', 404);
       });
 
       RouteLine.httpClient = mockClient;
@@ -189,7 +212,8 @@ void main() {
       final pdfUri = await RouteLine.getPdfTimetable('B42');
 
       expect(pdfUri, isNotNull);
-      expect(pdfUri.toString(), 'https://www.tib.org/pdftimetable.pdf');
+      expect(
+          pdfUri.toString(), 'https://www.tib.org/documents/20124/latest.pdf');
     });
   });
 }
