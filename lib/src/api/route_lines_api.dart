@@ -6,7 +6,7 @@ import 'package:mallorca_transit_services/src/models/route_line.dart';
 class RouteLinesApi {
   static Client httpClient = Client();
 
-  static Future<List<RouteLine>> getAllLines() async {
+  static Future<List<RouteLine>> getAllLines({bool activeOnly = false}) async {
     Uri url = Uri.parse("https://ws.tib.org/sictmws-rest/lines/ctmr4");
     try {
       Uint8List responseBytes =
@@ -14,6 +14,9 @@ class RouteLinesApi {
 
       List<RouteLine> lines = [];
       for (Map line in json.decode(utf8.decode(responseBytes))["linesInfo"]) {
+        if (activeOnly && line["act"] == false) {
+          continue;
+        }
         lines.add(RouteLine.fromJson(line));
       }
 
