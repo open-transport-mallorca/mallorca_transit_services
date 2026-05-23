@@ -234,7 +234,10 @@ class RouteTown {
   }
 
   factory RouteTown.fromJson(Map json) {
-    return RouteTown(id: json['id'], distance: (json['dis'] as num).toDouble(), name: json['nam']);
+    return RouteTown(
+        id: json['id'],
+        distance: (json['dis'] as num).toDouble(),
+        name: json['nam']);
   }
 
   static Map toJson(RouteTown town) {
