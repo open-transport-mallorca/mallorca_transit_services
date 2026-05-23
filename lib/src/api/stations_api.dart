@@ -9,7 +9,7 @@ class StationsApi {
   static Client httpClient = Client();
 
   /// Use [Station.code], not [Station.id].
-  static Future<List<RouteLine>> getLines(int stationCode) async {
+  static Future<List<RouteLine>> getLines(String stationCode) async {
     Uri url =
         Uri.parse("https://ws.tib.org/sictmws-rest/stops/ctmr4/$stationCode");
     try {
@@ -37,7 +37,7 @@ class StationsApi {
       return Station.fromJson(json.decode(utf8.decode(responseBytes)));
     } catch (e) {
       throw Exception(
-          "There was an error fetching the station. 😕 Please try again later.");
+          "There was an error fetching the station. Please try again later.");
     }
   }
 
@@ -59,7 +59,7 @@ class StationsApi {
       return stations;
     } catch (e) {
       throw Exception(
-          "There was an error fetching the stations. 😕 Please try again later.");
+          "There was an error fetching the stations. Please try again later.");
     }
   }
 }
