@@ -103,6 +103,32 @@ void main() {
       expect(routeLine.sublines, isNotNull);
       expect(routeLine.sublines!.length, 2);
       expect(routeLine.sublines![0].code, 'L401-1');
+
+      expect(routeLine.summerOnly, false);
+      expect(routeLine.onDemand, false);
+
+      expect(routeLine.holidays, isNotNull);
+      expect(routeLine.holidays!.length, 5);
+      expect(routeLine.holidays![0].name, 'Assumpció de la Mare de Déu 2024');
+      expect(routeLine.holidays![0].date, DateTime.parse('2024-08-15'));
+
+      expect(routeLine.sessions, isNotNull);
+      expect(routeLine.sessions!.length, 1);
+      expect(routeLine.sessions![0].busTypeId, 'I15');
+      expect(routeLine.sessions![0].current, true);
+      expect(routeLine.sessions![0].name, 'Cala Millor - Palma');
+
+      expect(routeLine.zoneIds, [5]);
+
+      expect(routeLine.sublines![0].main, true);
+      expect(routeLine.sublines![0].distance, 75554);
+      expect(routeLine.sublines![0].way, Way.way);
+      expect(routeLine.sublines![0].towns, isNotNull);
+      expect(routeLine.sublines![0].towns!.length, 2);
+      expect(routeLine.sublines![0].towns![0].name, 'Cala Millor');
+
+      expect(routeLine.sublines![1].main, false);
+      expect(routeLine.sublines![1].way, Way.back);
     });
 
     test('fromJson handles null sublines', () {
@@ -150,6 +176,41 @@ void main() {
       final lines = await RouteLinesApi.getAllLines();
 
       expect(lines, isNotEmpty);
+      expect(lines[0].code, 'B42');
+    });
+
+    test('getAllLines with activeOnly filters inactive lines', () async {
+      final mockClient = MockClient((request) async {
+        final responsePayload = json.encode({
+          "linesInfo": [
+            {
+              "act": true,
+              "cod": "B42",
+              "id": 1,
+              "nam": "Bus 42",
+              "color": "#FF0000",
+              "typ": 3,
+              "sublines": []
+            },
+            {
+              "act": false,
+              "cod": "B99",
+              "id": 2,
+              "nam": "Bus 99",
+              "color": "#00FF00",
+              "typ": 3,
+              "sublines": []
+            }
+          ]
+        });
+        return http.Response(responsePayload, 200);
+      });
+
+      RouteLinesApi.httpClient = mockClient;
+
+      final lines = await RouteLinesApi.getAllLines(activeOnly: true);
+
+      expect(lines.length, 1);
       expect(lines[0].code, 'B42');
     });
 

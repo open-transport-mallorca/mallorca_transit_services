@@ -4,9 +4,19 @@ import 'package:xml/xml.dart';
 
 enum Way { way, back }
 
-enum LineClass { main, sub }
+enum LineType {
+  train, // 1
+  metro, // 2
+  bus, // 3
+  unknown
+}
 
-enum LineType { train, metro, bus, unknown }
+enum PickupDropoffType {
+  regular, // 0
+  notAvailable, // 1
+  phoneAgency, // 2
+  coordinateWithDriver, // 3
+}
 
 class RouteLine {
   bool active;
@@ -16,6 +26,12 @@ class RouteLine {
   int color;
   LineType type;
   List<Subline>? sublines;
+  bool? summerOnly;
+  List<RouteSession>? sessions;
+  List<RouteTown>? towns;
+  List<RouteHoliday>? holidays;
+  List<int>? zoneIds;
+  bool? onDemand;
 
   RouteLine(
       {required this.active,
@@ -24,66 +40,73 @@ class RouteLine {
       required this.name,
       required this.color,
       this.sublines,
-      required this.type});
+      required this.type,
+      this.summerOnly,
+      this.sessions,
+      this.towns,
+      this.holidays,
+      this.zoneIds,
+      this.onDemand});
 
   @override
   String toString() {
-    return 'Line{active: $active, code: $code, color: $color id: $id, name: $name, type: $type, sublines: $sublines}';
+    return 'Line{active: $active, code: $code, color: $color, id: $id, name: $name, type: $type, sublines: $sublines, summerOnly: $summerOnly, sessions: $sessions, towns: $towns, holidays: $holidays, zoneIds: $zoneIds, onDemand: $onDemand}';
   }
 
   factory RouteLine.fromJson(Map json) {
-    LineType type;
+    final routeLine = RouteLine(
+      active: json['act'],
+      code: json['cod'],
+      id: json['id'],
+      name: json['nam'],
+      color: int.parse(json['color'].replaceAll("#", "0xFF")),
+      type: switch (json['typ']) {
+        1 => LineType.train,
+        2 => LineType.metro,
+        3 => LineType.bus,
+        _ => LineType.unknown,
+      },
+      summerOnly: json['summ'],
+    );
 
-    if (json['typ'] == 1) {
-      type = LineType.train;
-    } else if (json['typ'] == 2) {
-      type = LineType.metro;
-    } else if (json['typ'] == 3) {
-      type = LineType.bus;
-    } else {
-      type = LineType.unknown;
-    }
-
-    var routeLine = RouteLine(
-        active: json['act'],
-        code: json['cod'],
-        id: json['id'],
-        name: json['nam'],
-        color: int.parse(json['color'].replaceAll("#", "0xFF")),
-        type: type);
-
-    if (json['sublines'] != null) {
-      List<Subline>? sublines = (json['sublines'] as List<dynamic>)
-          .map((subline) => Subline.fromJson(subline, routeLine))
-          .toList();
-      routeLine.sublines = sublines;
-    }
+    routeLine.sublines = (json['sublines'] as List?)
+        ?.map((s) => Subline.fromJson(s, routeLine))
+        .toList();
+    routeLine.sessions = (json['sessions'] as List?)
+        ?.map((s) => RouteSession.fromJson(s))
+        .toList();
+    routeLine.towns =
+        (json['towns'] as List?)?.map((t) => RouteTown.fromJson(t)).toList();
+    routeLine.holidays = (json['festius'] as List?)
+        ?.map((h) => RouteHoliday.fromJson(h))
+        .toList();
+    routeLine.zoneIds =
+        (json['zoneTransport'] as List?)?.map((z) => z['id'] as int).toList();
+    routeLine.onDemand = json['dem'];
 
     return routeLine;
   }
 
   static Map toJson(RouteLine line) {
-    int type;
-
-    if (line.type == LineType.train) {
-      type = 1;
-    } else if (line.type == LineType.metro) {
-      type = 2;
-    } else if (line.type == LineType.bus) {
-      type = 3;
-    } else {
-      type = -1;
-    }
-
     return {
       'act': line.active,
       'cod': line.code,
       'id': line.id,
       'nam': line.name,
       'color': line.color.toString(),
-      'type': type,
-      'sublines':
-          line.sublines?.map((subline) => Subline.toJson(subline)).toList()
+      'typ': switch (line.type) {
+        LineType.train => 1,
+        LineType.metro => 2,
+        LineType.bus => 3,
+        _ => -1,
+      },
+      'sublines': line.sublines?.map(Subline.toJson).toList(),
+      'summ': line.summerOnly,
+      'sessions': line.sessions?.map(RouteSession.toJson).toList(),
+      'towns': line.towns?.map(RouteTown.toJson).toList(),
+      'festius': line.holidays?.map(RouteHoliday.toJson).toList(),
+      'zoneTransport': line.zoneIds?.map((id) => {'id': id}).toList(),
+      'dem': line.onDemand
     };
   }
 }
@@ -98,6 +121,9 @@ class Subline {
   LineType type;
   Way way;
   List<Station> stations;
+  List<RouteTown>? towns;
+  bool? main;
+  double? distance;
 
   Subline(
       {required this.parentLine,
@@ -108,7 +134,10 @@ class Subline {
       required this.color,
       required this.type,
       required this.stations,
-      required this.way});
+      required this.way,
+      this.towns,
+      this.main,
+      this.distance});
 
   factory Subline.fromJson(Map json, RouteLine mainRouteLine) {
     return Subline(
@@ -119,10 +148,17 @@ class Subline {
         name: json['nam'],
         color: mainRouteLine.color,
         type: mainRouteLine.type,
-        stations: json['stops']
+        stations: (json['stops'] as List<dynamic>)
             .map<Station>((station) => Station.fromJson(station))
             .toList(),
-        way: json['way'] == "Anada" ? Way.way : Way.back);
+        towns: json['towns'] != null
+            ? (json['towns'] as List<dynamic>)
+                .map((town) => RouteTown.fromJson(town))
+                .toList()
+            : null,
+        way: json['dir'] == "Anada" ? Way.way : Way.back,
+        main: json['main'],
+        distance: (json['distance'] as num?)?.toDouble());
   }
 
   static Map toJson(Subline subline) {
@@ -133,13 +169,102 @@ class Subline {
       'nam': subline.name,
       'stops':
           subline.stations.map((station) => Station.toJson(station)).toList(),
-      'way': subline.way == Way.way ? "Anada" : "Tornada"
+      'dir': subline.way == Way.way ? "Anada" : "Tornada",
+      'main': subline.main,
+      'towns': subline.towns?.map((town) => RouteTown.toJson(town)).toList(),
+      'distance': subline.distance
     };
   }
 
   @override
   String toString() {
-    return 'Subline{active: $active, code: $code, color: $color, id: $id, name: $name, type: $type, way: $way, stations: $stations, parentLine: $parentLine}';
+    return 'Subline{active: $active, code: $code, color: $color, id: $id, name: $name, type: $type, way: $way, stations: $stations, parentLine: $parentLine, towns: $towns, main: $main, distance: $distance}';
+  }
+}
+
+class RouteSession {
+  String? busTypeId;
+  bool current;
+  DateTime startDate;
+  DateTime endDate;
+  String name;
+
+  RouteSession(
+      {this.busTypeId,
+      required this.current,
+      required this.startDate,
+      required this.endDate,
+      required this.name});
+
+  @override
+  String toString() {
+    return 'RouteSession{busTypeId: $busTypeId, current: $current, startDate: $startDate, endDate: $endDate, name: $name}';
+  }
+
+  factory RouteSession.fromJson(Map json) {
+    return RouteSession(
+        busTypeId: json['busTypeId'],
+        current: json['cur'],
+        startDate: DateTime.parse(json['ini']),
+        endDate: DateTime.parse(json['end']),
+        name: json['nam']);
+  }
+
+  static Map toJson(RouteSession session) {
+    return {
+      'busTypeId': session.busTypeId,
+      'cur': session.current,
+      'ini': session.startDate.toIso8601String(),
+      'end': session.endDate.toIso8601String(),
+      'nam': session.name
+    };
+  }
+}
+
+class RouteTown {
+  int id;
+  double distance;
+  String name;
+
+  RouteTown({required this.id, required this.distance, required this.name});
+
+  @override
+  String toString() {
+    return 'RouteTown{id: $id, distance: $distance, name: $name}';
+  }
+
+  factory RouteTown.fromJson(Map json) {
+    return RouteTown(
+        id: json['id'],
+        distance: (json['dis'] as num).toDouble(),
+        name: json['nam']);
+  }
+
+  static Map toJson(RouteTown town) {
+    return {'id': town.id, 'dis': town.distance, 'nam': town.name};
+  }
+}
+
+/// Holidays that may affect the schedule of a route line.
+///
+/// Only returned by [RouteLinesApi.getLine], not by [RouteLinesApi.getAllLines].
+class RouteHoliday {
+  DateTime date;
+  String name;
+
+  RouteHoliday({required this.date, required this.name});
+
+  @override
+  String toString() {
+    return 'RouteHoliday{date: $date, name: $name}';
+  }
+
+  factory RouteHoliday.fromJson(Map json) {
+    return RouteHoliday(date: DateTime.parse(json['dat']), name: json['nam']);
+  }
+
+  static Map toJson(RouteHoliday holiday) {
+    return {'dat': holiday.date.toIso8601String(), 'nam': holiday.name};
   }
 }
 

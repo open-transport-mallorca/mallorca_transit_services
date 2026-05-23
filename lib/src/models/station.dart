@@ -1,5 +1,5 @@
 class Station {
-  int code;
+  String code;
   int id;
   double lat;
   double long;
@@ -21,7 +21,7 @@ class Station {
 
   factory Station.fromJson(Map json) {
     return Station(
-        code: int.parse(json['cod']),
+        code: json['cod'],
         id: json['id'],
         lat: json['lat'],
         long: json['lon'],
@@ -31,7 +31,7 @@ class Station {
 
   static Map toJson(Station station) {
     return {
-      'cod': station.code.toString(),
+      'cod': station.code,
       'id': station.id,
       'lat': station.lat,
       'lon': station.long,

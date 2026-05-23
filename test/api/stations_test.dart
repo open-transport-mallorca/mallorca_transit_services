@@ -18,7 +18,7 @@ void main() {
       };
 
       final station = Station.fromJson(stationJson);
-      expect(station.code, 123);
+      expect(station.code, '123');
       expect(station.id, 456);
       expect(station.lat, 37.7749);
       expect(station.long, -122.4194);
@@ -59,7 +59,7 @@ void main() {
       RouteLinesApi.httpClient = mockRouteLineClient;
       StationsApi.httpClient = mockClient;
 
-      final lines = await StationsApi.getLines(123);
+      final lines = await StationsApi.getLines('123');
       expect(lines.length, 2);
       expect(lines[0].name, 'Route Line 1');
     });
@@ -74,7 +74,7 @@ void main() {
       StationsApi.httpClient = mockClient;
 
       expect(
-        () async => await StationsApi.getLines(999),
+        () async => await StationsApi.getLines('999'),
         throwsA(isA<FormatException>()),
       );
     });
@@ -97,7 +97,7 @@ void main() {
       StationsApi.httpClient = mockClient;
 
       final station = await StationsApi.fromId(456);
-      expect(station.code, 123);
+      expect(station.code, '123');
       expect(station.id, 456);
       expect(station.lat, 37.7749);
       expect(station.long, -122.4194);

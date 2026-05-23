@@ -1,6 +1,6 @@
 name: mallorca_transit_services
 description: An unofficial, public API to access Mallorca's transportation services
-version: 2.0.0
+version: 2.1.0
 repository: https://github.com/open-transport-mallorca/mallorca_transit_services
 issue_tracker: https://github.com/open-transport-mallorca/mallorca_transit_services/issues
 

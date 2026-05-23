@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 2.1.0
+
+- Added new fields to `RouteLine`: `summerOnly`, `onDemand`, `sessions` (`RouteSession`), `towns` (`RouteTown`), `holidays` (`RouteHoliday`), `zoneIds`
+- Added new fields to `Subline`: `main`, `distance`, `towns` (`RouteTown`)
+- Added new model classes: `RouteSession`, `RouteTown`, `RouteHoliday`, `PickupDropoffType`
+- Added `activeOnly` parameter to `RouteLinesApi.getAllLines` to filter out inactive lines
+- Changed `Station.code` from `int` to `String` to match the API response format
+- Changed `StationsApi.getLines` parameter from `int` to `String`
+
 ## 2.0.0
 
 BREAKING CHANGE
