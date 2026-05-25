@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.3.0
+
+- Changed `stationCode` from `int` to `String` in `getDepartures` to match `Station` model and API response format
+
 ## 2.2.0
 
 - Added `seatedCapacity` and `standingCapacity` optional fields to `Passangers`

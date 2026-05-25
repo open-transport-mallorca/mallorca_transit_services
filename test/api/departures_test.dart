@@ -42,7 +42,7 @@ void main() {
       DeparturesApi.httpClient = mockHttpClient;
 
       final departures = await DeparturesApi.getDepartures(
-          stationCode: 123, numberOfDepartures: 2);
+          stationCode: "123", numberOfDepartures: 2);
 
       expect(departures, isA<List<Departure>>());
       expect(departures.length, 2);
@@ -58,7 +58,7 @@ void main() {
 
       expect(
           () async => await DeparturesApi.getDepartures(
-              stationCode: 123, numberOfDepartures: 2),
+              stationCode: "123", numberOfDepartures: 2),
           throwsA(isA<FormatException>()));
     });
 
@@ -71,7 +71,7 @@ void main() {
 
       expect(
           () async => await DeparturesApi.getDepartures(
-              stationCode: 123, numberOfDepartures: 2),
+              stationCode: "123", numberOfDepartures: 2),
           throwsA(isA<Exception>()));
     });
   });
