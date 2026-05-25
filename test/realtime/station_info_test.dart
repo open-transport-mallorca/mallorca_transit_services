@@ -5,7 +5,12 @@ void main() {
   group('RouteStationInfo', () {
     test('fromJson should correctly parse JSON data with multiple stops', () {
       final json = {
-        'bus': {'pas': 10, 'cap': 50}, // Sample passengers JSON data
+        'bus': {
+          'pas': 10,
+          'cap': 50,
+          'cap_seated': 30,
+          'cap_standing': 20
+        }, // Sample passengers JSON data
         'stops': [
           {
             'stop_id': 1,
@@ -29,6 +34,8 @@ void main() {
       // Test passengers
       expect(routeStationInfo.passangers.inBus, 10);
       expect(routeStationInfo.passangers.totalCapacity, 50);
+      expect(routeStationInfo.passangers.seatedCapacity, 30);
+      expect(routeStationInfo.passangers.standingCapacity, 20);
 
       // Test stops
       expect(routeStationInfo.stops.length, 2);
@@ -71,6 +78,39 @@ void main() {
 
       // Test stops
       expect(routeStationInfo.stops, isEmpty);
+    });
+
+    test('fromJson should handle missing seated & standing capacity', () {
+      final json = {
+        'bus': {
+          'pas': 10,
+          'cap': 50,
+        }, // Sample passengers JSON data
+        'stops': [
+          {
+            'stop_id': 1,
+            'stop_nam': 'Station A',
+            'arr_t': '0830',
+            'esta_dist': 2.5,
+            'esta_time': '2024-05-25T08:35:00Z'
+          },
+        ]
+      };
+
+      final routeStationInfo = RouteStationInfo.fromJson(json);
+
+      // Test passengers
+      expect(routeStationInfo.passangers.inBus, 10); // Default value
+      expect(routeStationInfo.passangers.totalCapacity, 50); // Default value
+      expect(routeStationInfo.passangers.seatedCapacity, null); // Default value
+      expect(
+          routeStationInfo.passangers.standingCapacity, null); // Default value
+
+      // Test stops
+      expect(routeStationInfo.stops.length, 1);
+      final stationOnRoute = routeStationInfo.stops[0];
+      expect(stationOnRoute.stopId, 1);
+      expect(stationOnRoute.stopName, 'Station A');
     });
   });
 
