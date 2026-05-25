@@ -8,7 +8,7 @@ class DeparturesApi {
 
   /// Throws [FormatException] for an invalid station code, [Exception] if no departures are found.
   static Future<List<Departure>> getDepartures(
-      {required int stationCode, required int numberOfDepartures}) async {
+      {required String stationCode, required int numberOfDepartures}) async {
     Uri url = Uri.parse(
         'http://tib.org/o/manager/stop-code/$stationCode/departures/ctmr4?res=$numberOfDepartures');
     try {
