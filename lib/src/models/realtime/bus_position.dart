@@ -2,13 +2,13 @@
 class BusPosition {
   final double lat;
   final double long;
-  final double speed;
+  final double? speed;
   final DateTime timestamp;
 
   BusPosition(
       {required this.lat,
       required this.long,
-      required this.speed,
+      this.speed,
       required this.timestamp});
 
   @override

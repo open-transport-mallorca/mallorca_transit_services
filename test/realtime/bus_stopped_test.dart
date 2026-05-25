@@ -34,11 +34,11 @@ void main() {
       expect(busStopped.stopName, 'Sample Stop');
       expect(busStopped.scheduledTime.hour, 8);
       expect(busStopped.scheduledTime.minute, 30);
-      expect(busStopped.actualTime.year, 2024);
-      expect(busStopped.actualTime.month, 5);
-      expect(busStopped.actualTime.day, 25);
-      expect(busStopped.actualTime.hour, 8);
-      expect(busStopped.actualTime.minute, 32);
+      expect(busStopped.actualTime!.year, 2024);
+      expect(busStopped.actualTime!.month, 5);
+      expect(busStopped.actualTime!.day, 25);
+      expect(busStopped.actualTime!.hour, 8);
+      expect(busStopped.actualTime!.minute, 32);
       expect(busStopped.stopTime!.year, 2024);
       expect(busStopped.stopTime!.month, 5);
       expect(busStopped.stopTime!.day, 25);
@@ -49,6 +49,29 @@ void main() {
       expect(busStopped.leaveTime!.day, 25);
       expect(busStopped.leaveTime!.hour, 8);
       expect(busStopped.leaveTime!.minute, 35);
+    });
+
+    test('fromJson should handle nullable fields being absent', () {
+      final json = {
+        'upd': '2024-05-25T08:30:00Z',
+        'lat': 42.1234,
+        'lng': -71.5678,
+        'vel': 35.5,
+        'del': null,
+        'pass': 20,
+        'stop_nam': 'Sample Stop',
+        'arr_t': '0830',
+        'arr_rt': null,
+        'stp_rt': null,
+        'dep_rt': null,
+      };
+
+      final busStopped = BusStopped.fromJson(json);
+
+      expect(busStopped.delay, isNull);
+      expect(busStopped.actualTime, isNull);
+      expect(busStopped.stopTime, isNull);
+      expect(busStopped.leaveTime, isNull);
     });
   });
 }
