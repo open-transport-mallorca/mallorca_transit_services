@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 2.2.0
+
+- Added `seatedCapacity` and `standingCapacity` optional fields to `Passangers`
+- Fixed nullable field handling in `BusStopped.fromJson`: `actualTime` now safely returns `null` when absent instead of throwing
+- Fixed numeric type coercion in `BusStopped.fromJson` and `BusPosition.fromJson`: `lat`, `lng`, and `speed` are now cast via `(num).toDouble()` to handle integer values from the API
+
 ## 2.1.0
 
 - Added new fields to `RouteLine`: `summerOnly`, `onDemand`, `sessions` (`RouteSession`), `towns` (`RouteTown`), `holidays` (`RouteHoliday`), `zoneIds`

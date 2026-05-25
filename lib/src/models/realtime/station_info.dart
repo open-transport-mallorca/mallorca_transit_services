@@ -60,15 +60,25 @@ class Passangers {
   /// May exceed [totalCapacity] when the bus is overcrowded.
   final int inBus;
   final int totalCapacity;
+  final int? seatedCapacity;
+  final int? standingCapacity;
 
-  Passangers({required this.inBus, required this.totalCapacity});
+  Passangers(
+      {required this.inBus,
+      required this.totalCapacity,
+      this.seatedCapacity,
+      this.standingCapacity});
 
   @override
   String toString() {
-    return '_Passangers{inBus: $inBus, totalCapacity: $totalCapacity}';
+    return '_Passangers{inBus: $inBus, totalCapacity: $totalCapacity, seatedCapacity: $seatedCapacity, standingCapacity: $standingCapacity}';
   }
 
   factory Passangers.fromJson(Map json) {
-    return Passangers(inBus: json['pas'], totalCapacity: json['cap']);
+    return Passangers(
+        inBus: json['pas'],
+        totalCapacity: json['cap'],
+        seatedCapacity: json['cap_seated'],
+        standingCapacity: json['cap_standing']);
   }
 }
