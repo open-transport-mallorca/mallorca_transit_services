@@ -24,9 +24,50 @@ void main() {
       expect(station.long, -122.4194);
       expect(station.name, 'Sample Station');
       expect(station.ref, 'Reference');
+      expect(station.pickupType, isNull);
+      expect(station.dropoffType, isNull);
 
       final json = Station.toJson(station);
-      expect(json, stationJson);
+      expect(json, {...stationJson, 'pickupType': null, 'dropoffType': null});
+    });
+
+    // Test pickup/drop-off type parsing (present on line/subline stops only)
+    test('fromJson parses pickupType/dropoffType and derived getters', () {
+      final dischargeOnly = Station.fromJson({
+        'cod': '51031',
+        'id': 1821,
+        'lat': 39.5867,
+        'lon': 3.375763,
+        'nam': 'Mare Selva 2',
+        'parent': 'sa Coma',
+        'pickupType': 1,
+        'dropoffType': 0
+      });
+      expect(dischargeOnly.pickupType, 1);
+      expect(dischargeOnly.dropoffType, 0);
+      expect(dischargeOnly.isDischargeOnly, isTrue);
+      expect(dischargeOnly.isPickupOnly, isFalse);
+
+      // Pickup-only stop: pickup allowed, no drop-off
+      final pickupOnly = Station.fromJson({
+        'cod': '123',
+        'id': 1,
+        'lat': 0.0,
+        'lon': 0.0,
+        'nam': 'Pickup Only',
+        'pickupType': 0,
+        'dropoffType': 1
+      });
+      expect(pickupOnly.isPickupOnly, isTrue);
+      expect(pickupOnly.isDischargeOnly, isFalse);
+
+      // Normal stop with the fields omitted
+      final normal = Station.fromJson(
+          {'cod': '456', 'id': 2, 'lat': 0.0, 'lon': 0.0, 'nam': 'Normal'});
+      expect(normal.pickupType, isNull);
+      expect(normal.dropoffType, isNull);
+      expect(normal.isDischargeOnly, isFalse);
+      expect(normal.isPickupOnly, isFalse);
     });
 
     // Test getLines method for successful response
