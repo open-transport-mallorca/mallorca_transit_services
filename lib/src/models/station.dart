@@ -5,6 +5,8 @@ class Station {
   double long;
   String name;
   String? ref;
+  int? pickupType;
+  int? dropoffType;
 
   Station(
       {required this.code,
@@ -12,11 +14,16 @@ class Station {
       required this.lat,
       required this.long,
       required this.name,
-      this.ref});
+      this.ref,
+      this.pickupType,
+      this.dropoffType});
+
+  bool get isDischargeOnly => pickupType == 1 && dropoffType != 1;
+  bool get isPickupOnly => dropoffType == 1 && pickupType != 1;
 
   @override
   String toString() {
-    return 'Station{code: $code, id: $id, lat: $lat, long: $long, name: $name, ref: $ref}';
+    return 'Station{code: $code, id: $id, lat: $lat, long: $long, name: $name, ref: $ref, pickupType: $pickupType, dropoffType: $dropoffType}';
   }
 
   factory Station.fromJson(Map json) {
@@ -26,7 +33,9 @@ class Station {
         lat: json['lat'],
         long: json['lon'],
         name: json['nam'],
-        ref: json['ref']);
+        ref: json['ref'],
+        pickupType: json['pickupType'],
+        dropoffType: json['dropoffType']);
   }
 
   static Map toJson(Station station) {
@@ -36,7 +45,9 @@ class Station {
       'lat': station.lat,
       'lon': station.long,
       'nam': station.name,
-      'ref': station.ref
+      'ref': station.ref,
+      'pickupType': station.pickupType,
+      'dropoffType': station.dropoffType
     };
   }
 }
