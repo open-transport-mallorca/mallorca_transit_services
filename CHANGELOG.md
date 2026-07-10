@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.4.0
+
+- Added `pickupType`, `dropoffType`, `isDischargeOnly` and `isPickupOnly` optional fields to `Station` model (not returned on all endpoints)
+
 ## 2.3.0
 
 - Changed `stationCode` from `int` to `String` in `getDepartures` to match `Station` model and API response format
