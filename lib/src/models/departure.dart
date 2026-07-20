@@ -1,14 +1,35 @@
 import 'dart:convert';
 
 class Departure {
+  /// Scheduled departure from the queried stop. Time only, so the date part is
+  /// the Unix epoch and is not a real date.
   DateTime departureTime;
+
+  /// Real-time estimated arrival at the queried stop. Carries a real date.
   DateTime estimatedArrival;
+
   String name;
   int tripId;
   RealTrip? realTrip;
   bool delayed;
   String lineCode;
+
+  /// Name of the trip's terminus.
   String? destination;
+
+  /// The line's colour as sent by the API, e.g. `"#28689D"`. Kept raw so it
+  /// round-trips untouched; see [lineColorValue] for an ARGB int.
+  String? lineColor;
+
+  /// Name of the trip's origin stop. Unverified: it was `null` in every
+  /// captured payload, so the type is assumed by symmetry with [destination].
+  String? originStop;
+
+  /// Arrival at the trip's terminus. Time only, like [departureTime].
+  DateTime? endTime;
+
+  @Deprecated(
+      'Misparsed: holds `et`, an arrival time, not a stop name. Use endTime.')
   String? departureStop;
 
   Departure(
@@ -20,12 +41,28 @@ class Departure {
       required this.delayed,
       required this.lineCode,
       this.destination,
+      this.lineColor,
+      this.originStop,
+      this.endTime,
+      @Deprecated(
+          'Misparsed: holds `et`, an arrival time, not a stop name. Use endTime.')
       this.departureStop});
+
+  /// [lineColor] as an ARGB int, or `null` if absent or not `#RRGGBB`.
+  int? get lineColorValue {
+    final raw = lineColor;
+    if (raw == null || !raw.startsWith('#')) return null;
+    return int.tryParse(raw.replaceFirst('#', '0xFF'));
+  }
 
   @override
   String toString() {
-    return 'Departure{departureTime: $departureTime, estimatedArrival: $estimatedArrival, name: $name, tripId: $tripId, realTrip: $realTrip, delayed: $delayed, lineCode: $lineCode, destination: $destination, departureStop: $departureStop}';
+    return 'Departure{departureTime: $departureTime, estimatedArrival: $estimatedArrival, name: $name, tripId: $tripId, realTrip: $realTrip, delayed: $delayed, lineCode: $lineCode, destination: $destination, lineColor: $lineColor, originStop: $originStop, endTime: $endTime, departureStop: $_departureStop}';
   }
+
+  // Internal read, so toString/toJson don't trip the deprecation warning.
+  // ignore: deprecated_member_use_from_same_package
+  String? get _departureStop => departureStop;
 
   factory Departure.fromJson(Map json) {
     return Departure(
@@ -33,12 +70,14 @@ class Departure {
         estimatedArrival: DateTime.parse(json['aet']),
         name: json['snam'],
         tripId: json['trip_id'],
-        realTrip: json['realTrip'] != null
-            ? RealTrip.fromJson(json['realTrip'])
-            : null,
+        realTrip: _realTripFromJson(json['realTrip']),
         delayed: json['dem'],
         lineCode: json['lcod'],
         destination: json['etn'],
+        lineColor: json['lineColor'],
+        originStop: json['dtn'],
+        endTime: json['et'] != null ? DateTime.tryParse(json['et']) : null,
+        // ignore: deprecated_member_use_from_same_package
         departureStop: json['et']);
   }
 
@@ -54,8 +93,20 @@ class Departure {
       'dem': departure.delayed,
       'lcod': departure.lineCode,
       'etn': departure.destination,
-      'et': departure.departureStop
+      'lineColor': departure.lineColor,
+      'dtn': departure.originStop,
+      // `et` backs both endTime and the deprecated departureStop. Prefer the
+      // parsed value; fall back for objects built with only the old field.
+      'et': departure.endTime?.toIso8601String() ?? departure._departureStop
     };
+  }
+
+  /// [RealTrip.toJson] returns an encoded string, not a map, so a round-trip
+  /// hands this key back as a string. Accept both shapes.
+  static RealTrip? _realTripFromJson(Object? value) {
+    if (value == null) return null;
+    if (value is String) return RealTrip.fromJson(jsonDecode(value));
+    return RealTrip.fromJson(value as Map);
   }
 }
 
@@ -118,9 +169,10 @@ class RealTrip {
     return RealTrip(
         estimatedArrival:
             json['aet'] != null ? DateTime.tryParse(json['aet']) : null,
-        lat: json['lastCoords']['lat'],
-        long: json['lastCoords']['lng'],
-        id: int.parse(json['id']),
+        lat: (json['lastCoords']['lat'] as num).toDouble(),
+        long: (json['lastCoords']['lng'] as num).toDouble(),
+        // The API sends a string; a round-trip through toJson sends an int.
+        id: json['id'] is int ? json['id'] : int.parse(json['id']),
         stats: json['bus'] != null
             ? RealTripBusStats.fromJson(json['bus'])
             : null);

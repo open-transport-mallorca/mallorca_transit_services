@@ -18,6 +18,10 @@ enum PickupDropoffType {
   coordinateWithDriver, // 3
 }
 
+/// A transit line.
+///
+/// Some fields are only populated by [RouteLinesApi.getLine] and are `null` on
+/// lines from [RouteLinesApi.getAllLines]. Each one is marked below.
 class RouteLine {
   bool active;
   String code;
@@ -25,13 +29,28 @@ class RouteLine {
   String name;
   int color;
   LineType type;
+
+  /// Only set by [RouteLinesApi.getLine].
   List<Subline>? sublines;
   bool? summerOnly;
   List<RouteSession>? sessions;
   List<RouteTown>? towns;
+
+  /// Only set by [RouteLinesApi.getLine].
   List<RouteHoliday>? holidays;
   List<int>? zoneIds;
   bool? onDemand;
+
+  /// The line's sector, e.g. `"100"`, `"400"`, `"Metro"` or `"Tren"`. Not
+  /// numeric, hence a [String]. `null` for the airport lines.
+  String? sector;
+
+  /// Date the line's current definition took effect.
+  /// Only set by [RouteLinesApi.getLine].
+  DateTime? startDate;
+
+  /// The line's internal entity id.
+  int? entityId;
 
   RouteLine(
       {required this.active,
@@ -46,11 +65,14 @@ class RouteLine {
       this.towns,
       this.holidays,
       this.zoneIds,
-      this.onDemand});
+      this.onDemand,
+      this.sector,
+      this.startDate,
+      this.entityId});
 
   @override
   String toString() {
-    return 'Line{active: $active, code: $code, color: $color, id: $id, name: $name, type: $type, sublines: $sublines, summerOnly: $summerOnly, sessions: $sessions, towns: $towns, holidays: $holidays, zoneIds: $zoneIds, onDemand: $onDemand}';
+    return 'Line{active: $active, code: $code, color: $color, id: $id, name: $name, type: $type, sublines: $sublines, summerOnly: $summerOnly, sessions: $sessions, towns: $towns, holidays: $holidays, zoneIds: $zoneIds, onDemand: $onDemand, sector: $sector, startDate: $startDate, entityId: $entityId}';
   }
 
   factory RouteLine.fromJson(Map json) {
@@ -67,6 +89,9 @@ class RouteLine {
         _ => LineType.unknown,
       },
       summerOnly: json['summ'],
+      sector: json['sec'],
+      startDate: json['ini'] != null ? DateTime.tryParse(json['ini']) : null,
+      entityId: json['entityId'],
     );
 
     routeLine.sublines = (json['sublines'] as List?)
@@ -106,7 +131,10 @@ class RouteLine {
       'towns': line.towns?.map(RouteTown.toJson).toList(),
       'festius': line.holidays?.map(RouteHoliday.toJson).toList(),
       'zoneTransport': line.zoneIds?.map((id) => {'id': id}).toList(),
-      'dem': line.onDemand
+      'dem': line.onDemand,
+      'sec': line.sector,
+      'ini': line.startDate?.toIso8601String(),
+      'entityId': line.entityId
     };
   }
 }
@@ -125,6 +153,12 @@ class Subline {
   bool? main;
   double? distance;
 
+  /// Free-text description. Empty in every captured payload.
+  String? description;
+
+  /// Numeric id of the parent line, matching [RouteLine.id].
+  int? lineId;
+
   Subline(
       {required this.parentLine,
       required this.active,
@@ -137,7 +171,9 @@ class Subline {
       required this.way,
       this.towns,
       this.main,
-      this.distance});
+      this.distance,
+      this.description,
+      this.lineId});
 
   factory Subline.fromJson(Map json, RouteLine mainRouteLine) {
     return Subline(
@@ -158,7 +194,9 @@ class Subline {
             : null,
         way: json['dir'] == "Anada" ? Way.way : Way.back,
         main: json['main'],
-        distance: (json['distance'] as num?)?.toDouble());
+        distance: (json['distance'] as num?)?.toDouble(),
+        description: json['desc'],
+        lineId: json['lineid']);
   }
 
   static Map toJson(Subline subline) {
@@ -172,13 +210,15 @@ class Subline {
       'dir': subline.way == Way.way ? "Anada" : "Tornada",
       'main': subline.main,
       'towns': subline.towns?.map((town) => RouteTown.toJson(town)).toList(),
-      'distance': subline.distance
+      'distance': subline.distance,
+      'desc': subline.description,
+      'lineid': subline.lineId
     };
   }
 
   @override
   String toString() {
-    return 'Subline{active: $active, code: $code, color: $color, id: $id, name: $name, type: $type, way: $way, stations: $stations, parentLine: $parentLine, towns: $towns, main: $main, distance: $distance}';
+    return 'Subline{active: $active, code: $code, color: $color, id: $id, name: $name, type: $type, way: $way, stations: $stations, parentLine: $parentLine, towns: $towns, main: $main, distance: $distance, description: $description, lineId: $lineId}';
   }
 }
 

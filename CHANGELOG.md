@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## 2.5.0
+
+- Added `lineColor`, `originStop` and `endTime` to `Departure`
+- Deprecated `Departure.departureStop`: it parsed `et`, an arrival time, not a stop name - use `endTime`
+- Added `sector`, `startDate` and `entityId` to `RouteLine`
+- Added `description` and `lineId` to `Subline`
+- Added `tripId` and `recordedAt` to `BusPosition`
+- Added `tripId` and `position` to `RouteStationInfo`
+- Added `stopCode` to `StationOnRoute`
+- Added `stopId`, `stopCode`, `tripId` and `recordedAt` to `BusStopped`
+- Fixed `Departure.fromJson` losing `realTrip` when re-reading its own `toJson` output: `RealTrip.toJson` returns an encoded JSON string, which `fromJson` now accepts alongside a map
+- Fixed numeric type coercion in `RealTrip.fromJson` (`lat`/`lng`) and `BusPosition.fromJson` (`lat`/`lng`/`vel`), which the 2.2.0 entry claimed but did not apply
+- Documented which endpoints populate the endpoint-dependent fields of `Station` and `RouteLine`
+
 ## 2.4.1
 
 - Added `town` optional field to `Station` model (not returned on all endpoints)
