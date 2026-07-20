@@ -26,9 +26,36 @@ void main() {
       expect(station.ref, 'Reference');
       expect(station.pickupType, isNull);
       expect(station.dropoffType, isNull);
+      expect(station.town, isNull);
 
       final json = Station.toJson(station);
-      expect(json, {...stationJson, 'pickupType': null, 'dropoffType': null});
+      expect(json, {
+        ...stationJson,
+        'pickupType': null,
+        'dropoffType': null,
+        'parent': null
+      });
+    });
+
+    // Test town parsing (comes from the 'parent' key)
+    test('fromJson and toJson should map town to the parent key', () {
+      final stationJson = {
+        'cod': '51031',
+        'id': 1821,
+        'lat': 39.5867,
+        'lon': 3.375763,
+        'nam': 'Mare Selva 2',
+        'ref': null,
+        'pickupType': null,
+        'dropoffType': null,
+        'parent': 'sa Coma'
+      };
+
+      final station = Station.fromJson(stationJson);
+      expect(station.town, 'sa Coma');
+
+      expect(Station.toJson(station), stationJson);
+      expect(station.toString(), contains('town: sa Coma'));
     });
 
     // Test pickup/drop-off type parsing (present on line/subline stops only)
@@ -43,6 +70,7 @@ void main() {
         'pickupType': 1,
         'dropoffType': 0
       });
+      expect(dischargeOnly.town, 'sa Coma');
       expect(dischargeOnly.pickupType, 1);
       expect(dischargeOnly.dropoffType, 0);
       expect(dischargeOnly.isDischargeOnly, isTrue);
@@ -66,6 +94,7 @@ void main() {
           {'cod': '456', 'id': 2, 'lat': 0.0, 'lon': 0.0, 'nam': 'Normal'});
       expect(normal.pickupType, isNull);
       expect(normal.dropoffType, isNull);
+      expect(normal.town, isNull);
       expect(normal.isDischargeOnly, isFalse);
       expect(normal.isPickupOnly, isFalse);
     });
@@ -129,7 +158,8 @@ void main() {
           'lat': 37.7749,
           'lon': -122.4194,
           'nam': 'Sample Station',
-          'ref': 'Reference'
+          'ref': 'Reference',
+          'parent': 'Palma'
         });
 
         return http.Response(stationResponse, 200);
@@ -144,6 +174,7 @@ void main() {
       expect(station.long, -122.4194);
       expect(station.name, 'Sample Station');
       expect(station.ref, 'Reference');
+      expect(station.town, 'Palma');
     });
 
     // Test fromId method for invalid id
