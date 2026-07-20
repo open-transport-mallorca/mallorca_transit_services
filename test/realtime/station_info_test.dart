@@ -137,6 +137,83 @@ void main() {
       expect(stationOnRoute.estimatedArrival?.hour, 8);
       expect(stationOnRoute.estimatedArrival?.minute, 35);
     });
+
+    test('fromJson parses stopCode', () {
+      final stationOnRoute = StationOnRoute.fromJson({
+        'stop_id': 1740,
+        'stop_code': '65002',
+        'stop_nam': 'Vilafranca 1',
+        'arr_t': '184500',
+        'esta_time': '20260720 184920'
+      });
+
+      expect(stationOnRoute.stopId, 1740);
+      expect(stationOnRoute.stopCode, '65002');
+      expect(stationOnRoute.scheduledArrival.hour, 18);
+      expect(stationOnRoute.scheduledArrival.minute, 45);
+      expect(
+          stationOnRoute.estimatedArrival, DateTime(2026, 7, 20, 18, 49, 20));
+      // Absent from every captured live payload
+      expect(stationOnRoute.estimatedDistance, isNull);
+    });
+
+    test('fromJson reads null for an absent stopCode', () {
+      final stationOnRoute = StationOnRoute.fromJson(
+          {'stop_id': 1, 'stop_nam': 'Station A', 'arr_t': '0830'});
+
+      expect(stationOnRoute.stopCode, isNull);
+    });
+  });
+
+  group('RouteStationInfo tripId & position', () {
+    // Live payload shape
+    final liveJson = {
+      'type': 'esta-info',
+      'rt_id': 9795766,
+      'pos': {
+        'lat': 39.5727,
+        'lng': 3.1969,
+        'vel': 48.33,
+        'time': '20260720 184148'
+      },
+      'bus': {'pas': 37, 'cap': 50, 'cap_seated': 50, 'cap_standing': 44},
+      'stops': [
+        {
+          'stop_id': 1740,
+          'stop_code': '65002',
+          'stop_nam': 'Vilafranca 1',
+          'arr_t': '184500',
+          'esta_time': '20260720 184920'
+        }
+      ]
+    };
+
+    test('fromJson parses tripId and the embedded position', () {
+      final info = RouteStationInfo.fromJson(liveJson);
+
+      expect(info.tripId, 9795766);
+      expect(info.position, isNotNull);
+      expect(info.position!.lat, 39.5727);
+      expect(info.position!.long, 3.1969);
+      expect(info.position!.speed, 48.33);
+      expect(info.position!.timestamp, DateTime(2026, 7, 20, 18, 41, 48));
+      expect(info.position!.recordedAt, isNull);
+      // Taken from the enclosing message
+      expect(info.position!.tripId, 9795766);
+
+      expect(info.stops.single.stopCode, '65002');
+      expect(info.passangers.inBus, 37);
+    });
+
+    test('fromJson reads null for an absent tripId and position', () {
+      final info = RouteStationInfo.fromJson({
+        'bus': {'pas': 10, 'cap': 50},
+        'stops': []
+      });
+
+      expect(info.tripId, isNull);
+      expect(info.position, isNull);
+    });
   });
 
   test('fromJson should handle missing optional fields', () {

@@ -73,5 +73,50 @@ void main() {
       expect(busStopped.stopTime, isNull);
       expect(busStopped.leaveTime, isNull);
     });
+
+    // Live payload shape
+    test('fromJson parses stopId, stopCode, tripId and recordedAt', () {
+      final busStopped = BusStopped.fromJson({
+        'type': 'stop',
+        'rt_id': 9795766,
+        'upd': '20260720 184059',
+        'date': '20260720 184056',
+        'lat': 39.5728,
+        'lng': 3.2023,
+        'vel': 0.0,
+        'del': 5,
+        'pass': 37,
+        'stop_id': 1599,
+        'stop_code': '33004',
+        'stop_nam': 'Sa Mora',
+        'arr_t': '183500'
+      });
+
+      expect(busStopped.stopId, 1599);
+      expect(busStopped.stopCode, '33004');
+      expect(busStopped.tripId, 9795766);
+      expect(busStopped.timestamp, DateTime(2026, 7, 20, 18, 40, 59));
+      expect(busStopped.recordedAt, DateTime(2026, 7, 20, 18, 40, 56));
+      expect(busStopped.scheduledTime.hour, 18);
+      expect(busStopped.scheduledTime.minute, 35);
+    });
+
+    test('fromJson reads null for absent stopId, stopCode, tripId, recordedAt',
+        () {
+      final busStopped = BusStopped.fromJson({
+        'upd': '2024-05-25T08:30:00Z',
+        'lat': 42.1234,
+        'lng': -71.5678,
+        'vel': 35.5,
+        'pass': 20,
+        'stop_nam': 'Sample Stop',
+        'arr_t': '0830'
+      });
+
+      expect(busStopped.stopId, isNull);
+      expect(busStopped.stopCode, isNull);
+      expect(busStopped.tripId, isNull);
+      expect(busStopped.recordedAt, isNull);
+    });
   });
 }

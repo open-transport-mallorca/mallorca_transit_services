@@ -281,5 +281,138 @@ void main() {
       expect(jsonMap['etn'], isNull);
       expect(jsonMap['et'], isNull);
     });
+
+    // Live payload shape
+    test('fromJson parses lineColor, originStop and endTime', () {
+      final departure = Departure.fromJson({
+        'dt': '1970-01-01T18:40:00',
+        'et': '1970-01-01T19:25:00',
+        'etn': 'Campos',
+        'dtn': 'Palma',
+        'aet': '2026-07-20T18:40:00',
+        'lcod': 'A51',
+        'trip_id': 659865,
+        'snam': 'A51',
+        'dem': false,
+        'lineColor': '#28689D'
+      });
+
+      expect(departure.lineColor, '#28689D');
+      expect(departure.lineColorValue, 0xFF28689D);
+      expect(departure.originStop, 'Palma');
+      expect(departure.endTime, DateTime.parse('1970-01-01T19:25:00'));
+      expect(departure.destination, 'Campos');
+      // The deprecated field keeps its old (misparsed) behaviour.
+      expect(departure.departureStop, '1970-01-01T19:25:00');
+    });
+
+    test('fromJson reads null for absent lineColor, originStop and endTime',
+        () {
+      final departure = Departure.fromJson({
+        'dt': '1970-01-01T18:40:00',
+        'aet': '2026-07-20T18:40:00',
+        'snam': 'A51',
+        'trip_id': 659865,
+        'dem': false,
+        'lcod': 'A51',
+      });
+
+      expect(departure.lineColor, isNull);
+      expect(departure.lineColorValue, isNull);
+      expect(departure.originStop, isNull);
+      expect(departure.endTime, isNull);
+      expect(departure.departureStop, isNull);
+    });
+
+    test('lineColorValue returns null for a non-hex lineColor', () {
+      final departure = Departure.fromJson({
+        'dt': '1970-01-01T18:40:00',
+        'aet': '2026-07-20T18:40:00',
+        'snam': 'A51',
+        'trip_id': 659865,
+        'dem': false,
+        'lcod': 'A51',
+        'lineColor': '401'
+      });
+
+      expect(departure.lineColor, '401');
+      expect(departure.lineColorValue, isNull);
+    });
+
+    test('toJson writes lineColor, originStop and endTime', () {
+      final departure = Departure(
+          departureTime: DateTime.parse('1970-01-01T18:40:00'),
+          estimatedArrival: DateTime.parse('2026-07-20T18:40:00'),
+          name: 'A51',
+          tripId: 659865,
+          delayed: false,
+          lineCode: 'A51',
+          destination: 'Campos',
+          lineColor: '#28689D',
+          originStop: 'Palma',
+          endTime: DateTime.parse('1970-01-01T19:25:00'));
+
+      final jsonMap = Departure.toJson(departure);
+
+      expect(jsonMap['lineColor'], '#28689D');
+      expect(jsonMap['dtn'], 'Palma');
+      expect(jsonMap['et'], '1970-01-01T19:25:00.000');
+    });
+
+    test('toJson falls back to departureStop when endTime is unset', () {
+      final departure = Departure(
+          departureTime: DateTime.parse('2024-05-24T08:30:00Z'),
+          estimatedArrival: DateTime.parse('2024-05-24T09:00:00Z'),
+          name: 'Bus 42',
+          tripId: 1,
+          delayed: false,
+          lineCode: 'B42',
+          departureStop: 'Main Street');
+
+      expect(Departure.toJson(departure)['et'], 'Main Street');
+    });
+
+    test('fromJson(toJson(x)) preserves every field', () {
+      final original = Departure.fromJson({
+        'dt': '1970-01-01T18:40:00.000',
+        'et': '1970-01-01T19:25:00.000',
+        'etn': 'Campos',
+        'dtn': 'Palma',
+        'aet': '2026-07-20T18:40:00.000',
+        'lcod': 'A51',
+        'trip_id': 659865,
+        'snam': 'A51',
+        'dem': true,
+        'lineColor': '#28689D',
+        'realTrip': {
+          'aet': '2026-07-20T18:45:00.000Z',
+          'lastCoords': {'lat': 39.5741, 'lng': 3.2015},
+          'id': '9795766',
+          'bus': {'passengers': 37, 'placesSeated': 50, 'placesStanding': 44}
+        }
+      });
+
+      final roundTripped = Departure.fromJson(Departure.toJson(original));
+
+      expect(roundTripped.departureTime, original.departureTime);
+      expect(roundTripped.estimatedArrival, original.estimatedArrival);
+      expect(roundTripped.name, original.name);
+      expect(roundTripped.tripId, original.tripId);
+      expect(roundTripped.delayed, original.delayed);
+      expect(roundTripped.lineCode, original.lineCode);
+      expect(roundTripped.destination, original.destination);
+      expect(roundTripped.lineColor, original.lineColor);
+      expect(roundTripped.originStop, original.originStop);
+      expect(roundTripped.endTime, original.endTime);
+      expect(roundTripped.departureStop, original.departureStop);
+      expect(roundTripped.realTrip!.id, original.realTrip!.id);
+      expect(roundTripped.realTrip!.lat, original.realTrip!.lat);
+      expect(roundTripped.realTrip!.long, original.realTrip!.long);
+      expect(roundTripped.realTrip!.estimatedArrival,
+          original.realTrip!.estimatedArrival);
+      expect(roundTripped.realTrip!.stats!.passengers,
+          original.realTrip!.stats!.passengers);
+      expect(roundTripped.toString(), original.toString());
+    });
   });
 }

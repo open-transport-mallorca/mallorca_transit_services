@@ -1,12 +1,25 @@
+/// A transit stop.
+///
+/// Which optional fields are populated depends on where the stop came from.
+/// Stops nested in a [Subline] carry [town], [pickupType] and [dropoffType]
+/// but no [ref]; stops from [StationsApi] carry [ref] but none of the others.
 class Station {
   String code;
   int id;
   double lat;
   double long;
   String name;
+
+  /// Only set on stops from [StationsApi].
   String? ref;
+
+  /// Only set on stops nested in a [Subline].
   int? pickupType;
+
+  /// Only set on stops nested in a [Subline].
   int? dropoffType;
+
+  /// Town the stop belongs to. Only set on stops nested in a [Subline].
   String? town;
 
   Station(
