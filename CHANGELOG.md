@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.4.1
+
+- Added `town` optional field to `Station` model (not returned on all endpoints)
+
 ## 2.4.0
 
 - Added `pickupType`, `dropoffType`, `isDischargeOnly` and `isPickupOnly` optional fields to `Station` model (not returned on all endpoints)
