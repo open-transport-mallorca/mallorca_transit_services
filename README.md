@@ -13,7 +13,7 @@ Install the package by adding it to your `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  mallorca_transit_services: ^1.0.1
+  mallorca_transit_services: ^2.4.1
 ```
 
 ## Usage
