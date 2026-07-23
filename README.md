@@ -13,7 +13,7 @@ Install the package by adding it to your `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  mallorca_transit_services: ^2.5.0
+  mallorca_transit_services: ^2.6.0
 ```
 
 ## Usage
@@ -64,28 +64,52 @@ LocationWebSocket.locationStream(busId).then((stream) {
   });
 ```
 
-Get the RSS feed of the public warnings:
+Get the public service warnings:
+
+```dart
+final warnings = await TransitRss.getWarnings();
+```
+
+Each warning carries an `id`, a `title`, a `link`, and a `published` `DateTime`.
+Its description and affected lines live on its page, so they are fetched
+separately - in a single request:
+
+```dart
+await TransitWarningScraper.fetchDetails(warning);
+print(warning.description);
+print(warning.affectedLines); // ['231', '302', 'A32']
+```
+
+The line codes are normalised: warning pages print `L231`, `LA32` and `L411e`,
+but `affectedLines` gives `231`, `A32` and `411e`, so they can be compared to
+`RouteLine.code` and `Departure.lineCode` directly.
+
+Get the public news:
+
+```dart
+final news = await TransitRss.getNews();
+await NewsScraper.fetchDetails(news.first); // fills paragraphs and imageUrl
+```
+
+The scrapers take a page URL, so a cached warning can be refreshed without
+keeping the feed item around:
+
+```dart
+await TransitWarningScraper.affectedLines(url);
+await TransitWarningScraper.description(url);
+await NewsScraper.description(url);
+```
+
+The `RssItem`-taking forms (`scrapeAffectedLines`, `scrapeWarningDescription`,
+`scrapeNewsDescription`, `scrapeNewsImage`) still work but are deprecated, and
+go in 3.0.0. Note `scrapeAffectedLines` keeps the `L` prefix.
+
+The raw `dart_rss` feeds are still available if you need a field the models do
+not carry:
 
 ```dart
 await TransitRss.getWarningFeed();
-```
-
-Get the RSS feed of the public news:
-
-```dart
 await TransitRss.getNewsFeed();
-```
-
-Scrape the website for the affected lines of a specific warning:
-
-```dart
-await TransitWarningScraper.scrapeAffectedLines(rssItem);
-```
-
-Scrape the website for the description of a specific warning:
-
-```dart
-await TransitWarningScraper.scrapeWarningDescription(rssItem);
 ```
 
 Scrape the website for the timetable PDF of a specific line:

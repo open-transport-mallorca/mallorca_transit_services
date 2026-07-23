@@ -18,6 +18,8 @@ export 'src/messaging/transit_rss.dart';
 export 'src/models/departure.dart';
 export 'src/models/station.dart';
 export 'src/models/route_line.dart';
+export 'src/models/transit_warning.dart';
+export 'src/models/transit_news.dart';
 
 // Realtime models
 export 'src/models/realtime/bus_position.dart';

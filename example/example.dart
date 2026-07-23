@@ -29,17 +29,25 @@ void main() async {
   final sublines = await RouteLinesApi.getSublines(route);
   print(sublines);
 
-  // Get the warning feed
-  final warnings = await TransitRss.getWarningFeed(Language.en);
-  print(warnings.items.first.title);
-  print(await TransitWarningScraper.scrapeAffectedLines(warnings.items.first));
-  print(await TransitWarningScraper.scrapeWarningDescription(
-      warnings.items.first));
+  // Get the service warnings
+  final warnings = await TransitRss.getWarnings(Language.en);
+  final warning = warnings.first;
+  print('${warning.title} (${warning.published})');
 
-  // Get the news feed
-  final news = await TransitRss.getNewsFeed(Language.en);
-  print(news.items.first.title);
-  print(await NewsScraper.scrapeNewsDescription(news.items.first));
+  // Fetch the description and the affected lines of a warning, in one request.
+  await TransitWarningScraper.fetchDetails(warning);
+  print(warning.affectedLines);
+  print(warning.description);
+
+  // Only the URL is needed to scrape, so a cached warning can be refreshed
+  // without keeping the feed item around.
+  print(await TransitWarningScraper.affectedLines(warning.link));
+  print(await TransitWarningScraper.description(warning.link));
+
+  // Get the news
+  final news = await TransitRss.getNews(Language.en);
+  print(news.first.title);
+  print(await NewsScraper.description(news.first.link));
 
   // Get the link to the PDF Timetable of line A42
   final timetablePdf = await RouteLinesApi.getPdfTimetable('A42');
