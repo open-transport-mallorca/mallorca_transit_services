@@ -28,13 +28,19 @@ class TransitWarning {
   /// warning affects no specific line.
   List<String>? affectedLines;
 
+  /// URL of the document (usually a PDF) attached to the warning, resolved
+  /// against [link]. `null` until [TransitWarningScraper.fetchDetails] has
+  /// run, and after it when the page has no such attachment.
+  String? documentUrl;
+
   TransitWarning(
       {required this.id,
       required this.link,
       this.title,
       this.published,
       this.description,
-      this.affectedLines});
+      this.affectedLines,
+      this.documentUrl});
 
   /// Returns `null` for an item without a link, which has neither an identity
   /// nor a page to scrape.
@@ -57,7 +63,8 @@ class TransitWarning {
             ? DateTime.tryParse(json['published'])
             : null,
         description: json['description'],
-        affectedLines: (json['affectedLines'] as List?)?.cast<String>());
+        affectedLines: (json['affectedLines'] as List?)?.cast<String>(),
+        documentUrl: json['documentUrl']);
   }
 
   static Map toJson(TransitWarning warning) {
@@ -68,11 +75,12 @@ class TransitWarning {
       'published': warning.published?.toIso8601String(),
       'description': warning.description,
       'affectedLines': warning.affectedLines,
+      'documentUrl': warning.documentUrl,
     };
   }
 
   @override
   String toString() {
-    return 'TransitWarning{id: $id, title: $title, link: $link, published: $published, affectedLines: $affectedLines, description: $description}';
+    return 'TransitWarning{id: $id, title: $title, link: $link, published: $published, affectedLines: $affectedLines, description: $description, documentUrl: $documentUrl}';
   }
 }

@@ -10,7 +10,8 @@ import 'package:mallorca_transit_services/mallorca_transit_services.dart';
 String warningPage(
     {String description =
         'Due to the celebration of FESTA ROMANA the stops are out of service.',
-    String lines = ''}) {
+    String lines = '',
+    String document = ''}) {
   return '''
 <html><body>
   <div class="avisos-container">
@@ -24,10 +25,21 @@ String warningPage(
       <h2 class="avisos-container-lines-header">Routes affected</h2>
       <ul class="avisos-container-lines-body">$lines</ul>
     </div>
+    <div class="avisos-container-document">$document</div>
   </div>
 </body></html>
 ''';
 }
+
+/// The link to an attached document, as printed on a warning page. The
+/// anchor text is localised (`Map`, `Notice`, `Plànol de parades`...) and
+/// never reliable; the `.pdf` segment sits mid-path, followed by a Liferay
+/// UUID and a cache-busting query string.
+String documentLink(
+        {String href =
+            '/documents/20124/492381/Plano.pdf/9c3b6e1a-1111-2222-3333-abcdef012345?t=1690000000000',
+        String text = 'Map'}) =>
+    '<p><a href="$href">$text</a></p>';
 
 /// One entry of the affected-lines list, as served by tib.org.
 String lineItem(String code, {String? href}) {
@@ -188,6 +200,62 @@ void main() {
     });
   });
 
+  group('documentUrl', () {
+    test('resolves the relative link against the page URL', () async {
+      TransitWarningScraper.httpClient = MockClient((request) async =>
+          http.Response(warningPage(document: documentLink()), 200));
+
+      final url = await TransitWarningScraper.documentUrl(
+          'https://www.tib.org/en/w/avis-festa-romana-alcudia');
+
+      expect(
+          url,
+          'https://www.tib.org/documents/20124/492381/Plano.pdf/'
+          '9c3b6e1a-1111-2222-3333-abcdef012345?t=1690000000000');
+    });
+
+    test('matches a .pdf path segment regardless of the localised link text',
+        () async {
+      for (final text in ['Map', 'Notice', 'Plànol de parades', 'Plànol de parada']) {
+        TransitWarningScraper.httpClient = MockClient((request) async =>
+            http.Response(warningPage(document: documentLink(text: text)),
+                200,
+                headers: {'content-type': 'text/html; charset=utf-8'}));
+
+        expect(await TransitWarningScraper.documentUrl('https://www.tib.org'),
+            isNotNull);
+      }
+    });
+
+    test('ignores a link whose path merely ends in pdf-like text', () async {
+      TransitWarningScraper.httpClient = MockClient((request) async =>
+          http.Response(
+              warningPage(
+                  document: documentLink(href: '/en/w/avis-not-a-pdf')),
+              200));
+
+      expect(
+          await TransitWarningScraper.documentUrl('https://www.tib.org'),
+          isNull);
+    });
+
+    test('returns null when the page has no attachment', () async {
+      TransitWarningScraper.httpClient =
+          MockClient((request) async => http.Response(warningPage(), 200));
+
+      expect(
+          await TransitWarningScraper.documentUrl('https://x.test'), isNull);
+    });
+
+    test('throws on a transport failure', () async {
+      TransitWarningScraper.httpClient =
+          MockClient((request) async => http.Response('Boom', 500));
+
+      expect(TransitWarningScraper.documentUrl('https://x.test'),
+          throwsA(isA<HttpException>()));
+    });
+  });
+
   group('parseFeedDate', () {
     test('parses the RFC 822 pubDate the feed writes', () {
       expect(TransitRss.parseFeedDate('Wed, 22 Jul 2026 22:43:00 GMT'),
@@ -300,15 +368,17 @@ void main() {
   });
 
   group('TransitWarning', () {
-    test('fetchDetails fills description and affected lines in one request',
-        () async {
+    test(
+        'fetchDetails fills description, affected lines and documentUrl in '
+        'one request', () async {
       var requests = 0;
       TransitWarningScraper.httpClient = MockClient((request) async {
         requests++;
         return http.Response(
             warningPage(
                 description: 'The stops are out of service.',
-                lines: [lineItem('231'), lineItem('A32')].join()),
+                lines: [lineItem('231'), lineItem('A32')].join(),
+                document: documentLink()),
             200);
       });
 
@@ -321,6 +391,24 @@ void main() {
       expect(requests, 1);
       expect(warning.description, 'The stops are out of service.');
       expect(warning.affectedLines, ['231', 'A32']);
+      expect(
+          warning.documentUrl,
+          'https://www.tib.org/documents/20124/492381/Plano.pdf/'
+          '9c3b6e1a-1111-2222-3333-abcdef012345?t=1690000000000');
+    });
+
+    test('fetchDetails leaves documentUrl null when the page has none',
+        () async {
+      TransitWarningScraper.httpClient = MockClient(
+          (request) async => http.Response(warningPage(), 200));
+
+      final warning = TransitWarning(
+          id: 'https://www.tib.org/en/w/avis',
+          link: 'https://www.tib.org/en/w/avis');
+
+      await TransitWarningScraper.fetchDetails(warning);
+
+      expect(warning.documentUrl, isNull);
     });
 
     test('survives a round trip through toJson', () {
@@ -330,7 +418,8 @@ void main() {
           title: 'Avis',
           published: DateTime.utc(2026, 7, 22, 22, 43),
           description: 'The stops are out of service.',
-          affectedLines: ['231', 'A32']);
+          affectedLines: ['231', 'A32'],
+          documentUrl: 'https://www.tib.org/documents/20124/492381/Plano.pdf');
 
       final roundTripped =
           TransitWarning.fromJson(TransitWarning.toJson(original));
@@ -341,6 +430,7 @@ void main() {
       expect(roundTripped.published, original.published);
       expect(roundTripped.description, original.description);
       expect(roundTripped.affectedLines, original.affectedLines);
+      expect(roundTripped.documentUrl, original.documentUrl);
     });
   });
 
