@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 2.6.0
+
+Everything here is additive. The four `RssItem`-taking scrapers keep their exact 2.5.0 behaviour, including the `L` prefix on line codes, and are deprecated in favour of URL-taking replacements. They will be removed in 3.0.0.
+
+- Added `TransitWarning` and `TransitNews` models, returned by `TransitRss.getWarnings` and `TransitRss.getNews`. They carry a stable `id`, a `published` `DateTime` parsed from the feed, and the fields that have to be scraped from the item's own page. `getWarningFeed` and `getNewsFeed` still return the raw `RssFeed`
+- Added URL-taking scrapers, so a consumer that caches its own model no longer needs `dart_rss`: `TransitWarningScraper.description`, `TransitWarningScraper.affectedLines`, `NewsScraper.description`, `NewsScraper.image` and `NewsScraper.imageUrl`. They return `null` or an empty list when the page layout changes, and throw only on transport failures
+- `TransitWarningScraper.affectedLines` returns line codes without the `L` prefix that warning pages print (`L231` -> `231`, `LA32` -> `A32`, `L411e` -> `411e`), so they can be compared to `RouteLine.code` and `Departure.lineCode` directly. `TransitWarningScraper.normaliseLineCode` exposes the same normalisation. Duplicates are dropped and page order is kept
+- Added `TransitWarningScraper.fetchDetails` and `NewsScraper.fetchDetails`, which fill in a model's scraped fields with a single request instead of one per field
+- Added `TransitRss.parseFeedDate`, which reads both the RFC 822 `pubDate` (`Wed, 22 Jul 2026 22:43:00 GMT`, which `DateTime.tryParse` rejects) and the ISO 8601 `dc:date`, and returns UTC. The models use it; it is public for consumers reading `RssItem.pubDate` off the raw feed
+- Added `httpClient` to `TransitRss`, `TransitWarningScraper` and `NewsScraper`, matching the API classes
+- Fixed `NewsScraper.scrapeNewsImage` always throwing: it looked for `class="portada"` among the descendants of the page's first `<img>`, where it can never appear, and then built the image URL with a doubled slash. It now resolves `img.portada`'s `src` against the page URL. This is the one behaviour change to a deprecated method, and it could not have been relied on
+- Deprecated `TransitWarningScraper.scrapeWarningDescription`, `TransitWarningScraper.scrapeAffectedLines`, `NewsScraper.scrapeNewsDescription` and `NewsScraper.scrapeNewsImage`. Each takes an `RssItem` only to read `rssItem.link!` off it, which throws on a feed item with no link
+
 ## 2.5.0
 
 - Added `lineColor`, `originStop` and `endTime` to `Departure`
