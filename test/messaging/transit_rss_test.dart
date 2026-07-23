@@ -216,10 +216,14 @@ void main() {
 
     test('matches a .pdf path segment regardless of the localised link text',
         () async {
-      for (final text in ['Map', 'Notice', 'Plànol de parades', 'Plànol de parada']) {
+      for (final text in [
+        'Map',
+        'Notice',
+        'Plànol de parades',
+        'Plànol de parada'
+      ]) {
         TransitWarningScraper.httpClient = MockClient((request) async =>
-            http.Response(warningPage(document: documentLink(text: text)),
-                200,
+            http.Response(warningPage(document: documentLink(text: text)), 200,
                 headers: {'content-type': 'text/html; charset=utf-8'}));
 
         expect(await TransitWarningScraper.documentUrl('https://www.tib.org'),
@@ -230,12 +234,10 @@ void main() {
     test('ignores a link whose path merely ends in pdf-like text', () async {
       TransitWarningScraper.httpClient = MockClient((request) async =>
           http.Response(
-              warningPage(
-                  document: documentLink(href: '/en/w/avis-not-a-pdf')),
+              warningPage(document: documentLink(href: '/en/w/avis-not-a-pdf')),
               200));
 
-      expect(
-          await TransitWarningScraper.documentUrl('https://www.tib.org'),
+      expect(await TransitWarningScraper.documentUrl('https://www.tib.org'),
           isNull);
     });
 
@@ -243,8 +245,7 @@ void main() {
       TransitWarningScraper.httpClient =
           MockClient((request) async => http.Response(warningPage(), 200));
 
-      expect(
-          await TransitWarningScraper.documentUrl('https://x.test'), isNull);
+      expect(await TransitWarningScraper.documentUrl('https://x.test'), isNull);
     });
 
     test('throws on a transport failure', () async {
@@ -399,8 +400,8 @@ void main() {
 
     test('fetchDetails leaves documentUrl null when the page has none',
         () async {
-      TransitWarningScraper.httpClient = MockClient(
-          (request) async => http.Response(warningPage(), 200));
+      TransitWarningScraper.httpClient =
+          MockClient((request) async => http.Response(warningPage(), 200));
 
       final warning = TransitWarning(
           id: 'https://www.tib.org/en/w/avis',
