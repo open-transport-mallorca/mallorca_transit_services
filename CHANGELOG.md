@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.7.0
+
+- Added `documentUrl` to `TransitWarning`: the URL of the document (usually a PDF) attached to the warning's page, resolved against its link. Filled by `TransitWarningScraper.fetchDetails`, alongside a standalone `TransitWarningScraper.documentUrl(url)`. `null` when the page has no attachment
+
 ## 2.6.0
 
 Everything here is additive. The four `RssItem`-taking scrapers keep their exact 2.5.0 behaviour, including the `L` prefix on line codes, and are deprecated in favour of URL-taking replacements. They will be removed in 3.0.0.

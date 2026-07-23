@@ -95,8 +95,17 @@ class TransitWarningScraper {
     return _parseAffectedLines(await _fetchDocument(url));
   }
 
-  /// Fills [TransitWarning.description] and [TransitWarning.affectedLines] from
-  /// the warning's page, in a single request, and returns the same warning.
+  /// URL of the document (usually a PDF) attached to the warning, resolved
+  /// against [url]. Returns `null` when the page has no such attachment.
+  ///
+  /// [url] is a warning page URL, i.e. [TransitWarning.link].
+  static Future<String?> documentUrl(String url) async {
+    return _parseDocumentUrl(await _fetchDocument(url), url);
+  }
+
+  /// Fills [TransitWarning.description], [TransitWarning.affectedLines] and
+  /// [TransitWarning.documentUrl] from the warning's page, in a single
+  /// request, and returns the same warning.
   ///
   /// Throws only on a transport failure; a page whose layout no longer matches
   /// leaves the description null and the lines empty.
@@ -104,6 +113,7 @@ class TransitWarningScraper {
     final document = await _fetchDocument(warning.link);
     warning.description = _parseDescription(document);
     warning.affectedLines = _parseAffectedLines(document);
+    warning.documentUrl = _parseDocumentUrl(document, warning.link);
     return warning;
   }
 
@@ -189,6 +199,23 @@ class TransitWarningScraper {
       }
     }
     return lines;
+  }
+
+  /// The first link on the page whose path has a segment ending in `.pdf`,
+  /// resolved against [pageUrl]. The `.pdf` segment is not necessarily the end
+  /// of the path (Liferay appends `/<uuid>?t=<ts>` after it), and the anchor
+  /// text is localised, so neither can be used to find it.
+  static String? _parseDocumentUrl(Document document, String pageUrl) {
+    for (final anchor in document.querySelectorAll('a')) {
+      final href = anchor.attributes['href'];
+      if (href == null || href.isEmpty) continue;
+      final segments = Uri.tryParse(href)?.pathSegments;
+      if (segments == null) continue;
+      if (segments.any((segment) => segment.toLowerCase().endsWith('.pdf'))) {
+        return Uri.parse(pageUrl).resolve(href).toString();
+      }
+    }
+    return null;
   }
 
   static String? _codeFromHref(String? href) {

@@ -13,7 +13,7 @@ Install the package by adding it to your `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  mallorca_transit_services: ^2.6.0
+  mallorca_transit_services: ^2.7.0
 ```
 
 ## Usage
@@ -71,13 +71,14 @@ final warnings = await TransitRss.getWarnings();
 ```
 
 Each warning carries an `id`, a `title`, a `link`, and a `published` `DateTime`.
-Its description and affected lines live on its page, so they are fetched
-separately - in a single request:
+Its description, affected lines and attached document live on its page, so
+they are fetched separately - in a single request:
 
 ```dart
 await TransitWarningScraper.fetchDetails(warning);
 print(warning.description);
 print(warning.affectedLines); // ['231', '302', 'A32']
+print(warning.documentUrl); // the attached PDF, if the page has one
 ```
 
 The line codes are normalised: warning pages print `L231`, `LA32` and `L411e`,
@@ -97,6 +98,7 @@ keeping the feed item around:
 ```dart
 await TransitWarningScraper.affectedLines(url);
 await TransitWarningScraper.description(url);
+await TransitWarningScraper.documentUrl(url);
 await NewsScraper.description(url);
 ```
 
