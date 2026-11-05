@@ -9,6 +9,9 @@ class BusStopped {
   double long;
   double speed;
   int? delay;
+
+  /// Passengers on board. Always `0` since October 2026, when TIB stopped
+  /// sending real counts, so it no longer means the bus is empty.
   int passangers;
   String stopName;
 

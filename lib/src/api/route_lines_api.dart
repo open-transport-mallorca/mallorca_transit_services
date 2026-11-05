@@ -1,13 +1,14 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:http/http.dart';
+import 'package:mallorca_transit_services/src/api/tib_client.dart';
 import 'package:mallorca_transit_services/src/models/route_line.dart';
 
 class RouteLinesApi {
-  static Client httpClient = Client();
+  static Client httpClient = TibClient.shared;
 
   static Future<List<RouteLine>> getAllLines({bool activeOnly = false}) async {
-    Uri url = Uri.parse("https://ws.tib.org/sictmws-rest/lines/ctmr4");
+    Uri url = Uri.parse("https://api.tib.org/sictmws/lines/ctmr4");
     try {
       Uint8List responseBytes =
           await httpClient.get(url).then((value) => value.bodyBytes);
@@ -27,8 +28,7 @@ class RouteLinesApi {
   }
 
   static Future<RouteLine> getLine(String lineCode) async {
-    Uri url =
-        Uri.parse("https://ws.tib.org/sictmws-rest/lines/ctmr4/$lineCode");
+    Uri url = Uri.parse("https://api.tib.org/sictmws/lines/ctmr4/$lineCode");
     try {
       Uint8List responseBytes =
           await httpClient.get(url).then((value) => value.bodyBytes);
@@ -43,7 +43,7 @@ class RouteLinesApi {
     try {
       if (lineId == null) {
         final lineQuery = await httpClient.get(
-            Uri.parse("https://ws.tib.org/sictmws-rest/lines/ctmr4/$lineCode"));
+            Uri.parse("https://api.tib.org/sictmws/lines/ctmr4/$lineCode"));
         lineId = json.decode(lineQuery.body)["id"];
       }
       final pdfQuery = await httpClient.get(Uri.parse(
@@ -67,8 +67,7 @@ class RouteLinesApi {
   /// Pass [onlyActive] false to include inactive sublines.
   static Future<List<Subline>> getSublines(RouteLine line,
       [bool onlyActive = true]) async {
-    Uri url =
-        Uri.parse("https://ws.tib.org/sictmws-rest/lines/ctmr4/${line.code}");
+    Uri url = Uri.parse("https://api.tib.org/sictmws/lines/ctmr4/${line.code}");
     try {
       Uint8List responseBytes =
           await httpClient.get(url).then((value) => value.bodyBytes);
@@ -89,7 +88,7 @@ class RouteLinesApi {
 
   static Future<RoutePath> getPath(Subline subline) async {
     Uri url = Uri.parse(
-        "https://ws.tib.org/sictmws-rest/lines/ctmr4/${subline.parentLine.code}/kmz/${subline.code}");
+        "https://api.tib.org/sictmws/lines/ctmr4/${subline.parentLine.code}/kmz/${subline.code}");
     try {
       Uint8List responseBytes =
           await httpClient.get(url).then((value) => value.bodyBytes);

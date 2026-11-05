@@ -1,16 +1,18 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:http/http.dart';
+import 'package:mallorca_transit_services/src/api/tib_client.dart';
 import 'package:mallorca_transit_services/src/models/departure.dart';
 
 class DeparturesApi {
-  static Client httpClient = Client();
+  static Client httpClient = TibClient.shared;
 
-  /// Throws [FormatException] for an invalid station code, [Exception] if no departures are found.
+  /// Throws [FormatException] for an invalid station code,
+  /// [Exception] if no departures are found.
   static Future<List<Departure>> getDepartures(
       {required String stationCode, required int numberOfDepartures}) async {
     Uri url = Uri.parse(
-        'http://tib.org/o/manager/stop-code/$stationCode/departures/ctmr4?res=$numberOfDepartures');
+        'https://www.tib.org/o/manager/stop-code/$stationCode/departures/ctmr4?res=$numberOfDepartures');
     try {
       Uint8List responseBytes =
           await httpClient.get(url).then((value) => value.bodyBytes);

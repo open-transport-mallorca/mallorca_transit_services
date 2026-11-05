@@ -13,7 +13,7 @@ Install the package by adding it to your `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  mallorca_transit_services: ^2.7.0
+  mallorca_transit_services: ^2.8.0
 ```
 
 ## Usage
@@ -118,6 +118,17 @@ Scrape the website for the timetable PDF of a specific line:
 
 ```dart
 await RouteLine.getPdfTimetable('A42');
+```
+
+### API key
+
+TIB's stops and lines service needs an API key. The package handles it: it reads
+the public key tib.org's own frontend uses, caches it, and sends it with every
+request through `TibClient.shared`, the default `httpClient` of every API class.
+To route requests through your own client, wrap it:
+
+```dart
+StationsApi.httpClient = TibClient(inner: myClient);
 ```
 
 The full example can be found in the [example.dart](example/example.dart)

@@ -89,6 +89,11 @@ class StationOnRoute {
   }
 }
 
+/// Passenger count and capacity of the bus.
+///
+/// Since October 2026 TIB sends `0` for every field, capacities included.
+/// Treat [inBus] and [totalCapacity] both being `0` as no data, not an empty
+/// bus.
 class Passangers {
   /// May exceed [totalCapacity] when the bus is overcrowded.
   final int inBus;
