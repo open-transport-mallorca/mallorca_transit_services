@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 2.8.0
+
+TIB moved its stops and lines service behind an API key, and the old `ws.tib.org` host no longer responds, so every `StationsApi` and `RouteLinesApi` call failed. This release fixes them without changes to calling code.
+
+- Added `TibClient`, an HTTP client that sends TIB's API key with every request. It fetches the key from tib.org's public config on first use and caches it, refetches and retries once on a `401` in case the key rotated, and sends requests without the key if the config cannot be fetched, so endpoints that do not need it keep working. `TibClient.shared` is now the default `httpClient` of every API, RSS and scraper class
+- Added `TibConfig`, the parsed config. Pass one to `TibClient(config: ...)` to skip fetching it
+- Moved `StationsApi` and `RouteLinesApi` from `https://ws.tib.org/sictmws-rest` to `https://api.tib.org/sictmws`. Paths and responses are unchanged
+- `DeparturesApi` now requests `https://www.tib.org` directly instead of following a redirect from `http://tib.org`
+- A custom `httpClient` replaces `TibClient.shared` and so no longer gets the key; wrap it with `TibClient(inner: yourClient)`
+
 ## 2.7.0
 
 - Added `documentUrl` to `TransitWarning`: the URL of the document (usually a PDF) attached to the warning's page, resolved against its link. Filled by `TransitWarningScraper.fetchDetails`, alongside a standalone `TransitWarningScraper.documentUrl(url)`. `null` when the page has no attachment
