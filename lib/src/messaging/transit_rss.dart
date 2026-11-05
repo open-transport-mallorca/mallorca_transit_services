@@ -5,6 +5,7 @@ import 'package:html/dom.dart';
 import 'package:html/parser.dart' show parse;
 import 'package:dart_rss/dart_rss.dart';
 import 'package:http/http.dart';
+import 'package:mallorca_transit_services/src/api/tib_client.dart';
 import 'package:mallorca_transit_services/src/messaging/feed_date.dart'
     as feed_date;
 import 'package:mallorca_transit_services/src/models/transit_news.dart';
@@ -19,7 +20,7 @@ enum Language { ca, es, en, de }
 /// recommended entry points. [getWarningFeed] and [getNewsFeed] expose the raw
 /// `dart_rss` feed for consumers that need fields the models do not carry.
 class TransitRss {
-  static Client httpClient = Client();
+  static Client httpClient = TibClient.shared;
 
   /// The service warnings, most recent first.
   ///
@@ -74,7 +75,7 @@ class TransitRss {
 
 /// Scrapes warning detail pages, given the page URL.
 class TransitWarningScraper {
-  static Client httpClient = Client();
+  static Client httpClient = TibClient.shared;
 
   /// The warning's full text, or `null` when the page has no description block.
   ///
@@ -234,7 +235,7 @@ class TransitWarningScraper {
 
 /// Scrapes news detail pages, given the page URL.
 class NewsScraper {
-  static Client httpClient = Client();
+  static Client httpClient = TibClient.shared;
 
   /// The paragraphs of the article body, or `null` when the page has no body
   /// block.

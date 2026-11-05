@@ -390,7 +390,7 @@ void main() {
 
     test('getPdfTimetable fetches the most recent PDF timetable URL', () async {
       final mockClient = MockClient((request) async {
-        if (request.url.host == 'ws.tib.org') {
+        if (request.url.host == 'api.tib.org') {
           return http.Response('{"id": 3066}', 200);
         }
 

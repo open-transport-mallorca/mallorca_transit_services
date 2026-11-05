@@ -1,17 +1,17 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:http/http.dart';
+import 'package:mallorca_transit_services/src/api/tib_client.dart';
 import 'package:mallorca_transit_services/src/api/route_lines_api.dart';
 import 'package:mallorca_transit_services/src/models/route_line.dart';
 import 'package:mallorca_transit_services/src/models/station.dart';
 
 class StationsApi {
-  static Client httpClient = Client();
+  static Client httpClient = TibClient.shared;
 
   /// Use [Station.code], not [Station.id].
   static Future<List<RouteLine>> getLines(String stationCode) async {
-    Uri url =
-        Uri.parse("https://ws.tib.org/sictmws-rest/stops/ctmr4/$stationCode");
+    Uri url = Uri.parse("https://api.tib.org/sictmws/stops/ctmr4/$stationCode");
     try {
       Uint8List responseBytes =
           await httpClient.get(url).then((value) => value.bodyBytes);
@@ -23,12 +23,12 @@ class StationsApi {
 
       return lines;
     } on FormatException {
-      throw FormatException("The station code is invalid. 😶");
+      throw FormatException("The station code is invalid.");
     }
   }
 
   static Future<Station> fromId(int id) async {
-    final url = Uri.parse("https://ws.tib.org/sictmws-rest/stops/ctmr4/$id");
+    final url = Uri.parse("https://api.tib.org/sictmws/stops/ctmr4/$id");
 
     try {
       Uint8List responseBytes =
@@ -43,8 +43,7 @@ class StationsApi {
 
   /// Pass [count] to limit results; -1 returns all stations (default).
   static Future<List<Station>> getAllStations({int count = -1}) async {
-    final url =
-        Uri.parse("https://ws.tib.org/sictmws-rest/stops/ctmr4?res=$count");
+    final url = Uri.parse("https://api.tib.org/sictmws/stops/ctmr4?res=$count");
 
     try {
       Uint8List responseBytes =

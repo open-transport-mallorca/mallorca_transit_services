@@ -10,6 +10,7 @@ library mallorca_transit_services;
 export 'src/api/departures_api.dart';
 export 'src/api/stations_api.dart';
 export 'src/api/route_lines_api.dart';
+export 'src/api/tib_client.dart';
 
 // Messaging
 export 'src/messaging/transit_rss.dart';
