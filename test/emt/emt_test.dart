@@ -501,4 +501,133 @@ void main() {
           timetable.toString());
     });
   });
+
+  group('EmtAlerts', () {
+    Map alertJson() => {
+          'idAlerta': 79080,
+          'idAgencia': 1,
+          'alertStopId': null,
+          'paradas': [
+            {'idParada': 16, 'idNombre': 'rotonda de Portopí'},
+          ],
+          'lineas': [
+            {'idLinea': 30, 'nombreLinea': 'Marivent', 'tripId': 0},
+          ],
+          'fechas': [
+            {'horaInicio': '15/11/2026 06:00', 'horaFin': '15/11/2026 15:30'},
+            {'horaInicio': '22/11/2026 06:00', 'horaFin': null},
+          ],
+          'titulo': 'Línea  Sin servicio carrera ',
+          'descripcion': 'La línea 30 queda sin servicio.\n',
+          'createdAt': '10/11/2026 08:12',
+          'updatedAt': '12/11/2026 23:42',
+          'files': [1783],
+          'priority': {'name': 'Ordinaria', 'order': 3},
+        };
+
+    test('all parses alerts in the language', () async {
+      final emt = mockEmt((request) async {
+        expect(request.url.path, '/maas/api/v1/alert/');
+        expect(request.url.queryParameters, {'locale': 'en'});
+        return jsonResponse([alertJson()]);
+      });
+
+      final alert = (await emt.alerts.all(language: Language.en)).single;
+
+      expect(alert.id, 79080);
+      expect(alert.title, 'Línea Sin servicio carrera');
+      expect(alert.description, 'La línea 30 queda sin servicio.');
+      expect(alert.lineIds, [30]);
+      expect(alert.stopIds, [16]);
+      expect(alert.periods, [
+        (start: DateTime(2026, 11, 15, 6), end: DateTime(2026, 11, 15, 15, 30)),
+        (start: DateTime(2026, 11, 22, 6), end: null),
+      ]);
+      expect(alert.published, DateTime(2026, 11, 10, 8, 12));
+      expect(alert.attachmentIds, [1783]);
+    });
+
+    test('byId returns null when EMT sends no alert', () async {
+      final emt = mockEmt((request) async {
+        expect(request.url.path, '/maas/api/v1/alert/1');
+        return jsonResponse([]);
+      });
+
+      expect(await emt.alerts.byId(1), isNull);
+    });
+
+    test('attachment downloads the file', () async {
+      final emt = mockEmt((request) async {
+        expect(request.url.path, '/maas/api/v1/alert/downloadFile');
+        expect(request.url.queryParameters['announceId'], '79080');
+        expect(request.url.queryParameters['attachmentId'], '1783');
+        return http.Response.bytes([37, 80, 68, 70], 200);
+      });
+
+      final bytes =
+          await emt.alerts.attachment(EmtAlert.fromJson(alertJson()), 1783);
+
+      expect(bytes, [37, 80, 68, 70]);
+    });
+
+    test('fromJson(toJson(x)) keeps every field', () {
+      final alert = EmtAlert.fromJson(alertJson());
+
+      expect(EmtAlert.fromJson(alert.toJson()).toString(), alert.toString());
+    });
+  });
+
+  group('EmtNews', () {
+    Map articleJson(int id, String published) => {
+          'id': id,
+          'agencyOriginId': 29,
+          'language': {'id': 1, 'label': 'Castellano', 'locale': 'es'},
+          'title': 'Article $id ',
+          'summary': 'Summary $id',
+          'description': '<p>First</p><p>Second</p>',
+          'link': null,
+          'publishedAt': published,
+          'image': 366,
+          'categories': [],
+        };
+
+    test('all reads pages until a short one and sorts newest first', () async {
+      final pages = <String?>[];
+      final emt = mockEmt((request) async {
+        expect(request.url.path, '/maas/api/v1/notice/');
+        expect(request.url.queryParameters['locale'], 'ca');
+        final page = request.url.queryParameters['pageNumber'];
+        pages.add(page);
+        final size = int.parse(request.url.queryParameters['elementsPerPage']!);
+        return jsonResponse({
+          'pagination': {'total': 999, 'page': int.parse(page!)},
+          'data': page == '1'
+              ? [
+                  for (var i = 0; i < size; i++)
+                    articleJson(i, '2026-01-01T00:00:00')
+                ]
+              : [articleJson(1000, '2026-11-10T00:00:00')],
+        });
+      });
+
+      final news = await emt.news.all(language: Language.ca);
+
+      expect(pages, ['1', '2']);
+      expect(news.length, 101);
+      expect(news.first.id, 1000);
+      expect(news.first.title, 'Article 1000');
+      expect(news.first.summary, 'Summary 1000');
+      expect(news.first.published, DateTime(2026, 11, 10));
+      expect(news.first.paragraphs, ['First', 'Second']);
+      expect(news.first.imageUrl.toString(),
+          'https://www.emtpalma.cat/maas/api/v1/image/download/366');
+    });
+
+    test('fromJson(toJson(x)) keeps every field', () {
+      final article =
+          EmtArticle.fromJson(articleJson(1, '2026-11-10T00:00:00'));
+
+      expect(EmtArticle.fromJson(article.toJson()).toJson(), article.toJson());
+    });
+  });
 }
