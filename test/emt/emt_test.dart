@@ -303,4 +303,75 @@ void main() {
 
     expect(lines.map((l) => l.code), ['46', '47']);
   });
+
+  group('EmtDepartures', () {
+    Map vehicle(int code, int seconds, {bool arriving = false}) => {
+          'code': code,
+          'destination': 'Illetes',
+          'seconds': seconds,
+          'atStop': false,
+          'arriving': arriving,
+          'coordinateX': 0.0,
+          'coordinateY': 0.0,
+          'meters': 0,
+        };
+
+    test('next flattens the lines and sorts by arrival', () async {
+      final emt = mockEmt((request) async {
+        expect(request.url.path, '/maas/api/v1/agency/stops/401/timestr');
+        return jsonResponse([
+          {
+            'lineCode': '4',
+            'head': false,
+            'vehicles': [vehicle(739, 291), vehicle(723, 2091)],
+          },
+          {
+            'lineCode': '14',
+            'head': true,
+            'vehicles': [vehicle(116, 69, arriving: true)],
+          },
+        ]);
+      });
+
+      final before = DateTime.now();
+      final departures = await emt.departures.next(401);
+
+      expect(departures.map((d) => d.busNumber), [116, 739, 723]);
+      final first = departures.first;
+      expect(first.lineCode, '14');
+      expect(first.destination, 'Illetes');
+      expect(first.arriving, isTrue);
+      expect(first.atStop, isFalse);
+      expect(first.startsHere, isTrue);
+      expect(departures[1].startsHere, isFalse);
+      expect(
+          first.arrival.difference(before).inSeconds, inInclusiveRange(69, 70));
+    });
+
+    test('next is empty when nothing is coming', () async {
+      final emt = mockEmt((_) async =>
+          jsonResponse({'codigo': 'NOT_EXISTS_LINESTOPTIME_BY_STOP_ID'}, 404));
+
+      expect(await emt.departures.next(5), isEmpty);
+    });
+
+    test('fromJson counts seconds from now', () {
+      final now = DateTime(2026, 11, 12, 23);
+      final departure = EmtDeparture.fromJson(
+          {...vehicle(739, 90), 'lineCode': '4'},
+          now: now);
+
+      expect(departure.arrival, DateTime(2026, 11, 12, 23, 1, 30));
+      expect(departure.startsHere, isFalse);
+    });
+
+    test('fromJson(toJson(x)) keeps every field', () {
+      final departure = EmtDeparture.fromJson(
+          {...vehicle(739, 90, arriving: true), 'lineCode': '4', 'head': true},
+          now: DateTime(2026, 11, 12, 23));
+
+      expect(EmtDeparture.fromJson(departure.toJson()).toString(),
+          departure.toString());
+    });
+  });
 }

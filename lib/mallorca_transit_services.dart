@@ -31,5 +31,6 @@ export 'src/tib/models/realtime/connection_close.dart';
 // EMT
 export 'src/emt/emt.dart';
 export 'src/emt/emt_client.dart';
+export 'src/emt/models/emt_departure.dart';
 export 'src/emt/models/emt_line.dart';
 export 'src/emt/models/emt_stop.dart';

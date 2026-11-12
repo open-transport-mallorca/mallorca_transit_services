@@ -2,9 +2,11 @@ import 'dart:convert';
 import 'package:http/http.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:mallorca_transit_services/src/emt/emt_client.dart';
+import 'package:mallorca_transit_services/src/emt/models/emt_departure.dart';
 import 'package:mallorca_transit_services/src/emt/models/emt_line.dart';
 import 'package:mallorca_transit_services/src/emt/models/emt_stop.dart';
 
+part 'emt_departures.dart';
 part 'emt_lines.dart';
 part 'emt_stops.dart';
 
@@ -17,6 +19,7 @@ class Emt {
 
   late final EmtStops stops = EmtStops._(this);
   late final EmtLines lines = EmtLines._(this);
+  late final EmtDepartures departures = EmtDepartures._(this);
 
   Emt({EmtClient? client}) : client = client ?? EmtClient();
 
