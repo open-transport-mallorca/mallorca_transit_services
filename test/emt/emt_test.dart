@@ -374,4 +374,131 @@ void main() {
           departure.toString());
     });
   });
+
+  group('EmtTimetables', () {
+    final subline =
+        EmtSubline(id: 1394, lineId: 17, name: '', shortName: '', number: 1);
+
+    Map timetableJson() => {
+          'id': 2711,
+          'sublineCode': 1394,
+          'dayTypeConfiguration': {
+            'code': 'NOC',
+            'description': 'Viernes, sábados y vísperas de festivo',
+            'monday': false,
+            'tuesday': false,
+            'wednesday': false,
+            'thursday': false,
+            'friday': true,
+            'saturday': true,
+            'sunday': false,
+            'publicHoliday': false,
+            'publicHolidayEve': true,
+            'order': 9,
+          },
+          'startPublishDate': '2026-11-04',
+          'endPublishDate': null,
+          'startValidityDate': '2026-11-09',
+          'endValidityDate': null,
+          'morningInterval': '15',
+          'afternoonInterval': null,
+          'timeTableCode': '00403-NOC',
+          'outgoingComment': 'Referència de pas per pl. Espanya.',
+          'returnComment': '',
+          'timeTables': [
+            {
+              'routeCode': 1559,
+              'direction': {'code': 1, 'name': 'Anada'},
+              'trips': [
+                {
+                  'fromStopCode': 796,
+                  'toStopCode': 93,
+                  'numberOfTrips': 4,
+                  'departureTimes': ['23:18', '23:38', '00:07', '03:30'],
+                },
+              ],
+            },
+            {
+              'routeCode': 1562,
+              'direction': {'code': 2, 'name': 'Tornada'},
+              'trips': [
+                {
+                  'fromStopCode': 93,
+                  'toStopCode': 796,
+                  'numberOfTrips': 1,
+                  'departureTimes': ['06:00'],
+                },
+                {
+                  'fromStopCode': 50,
+                  'toStopCode': 796,
+                  'numberOfTrips': 1,
+                  'departureTimes': ['06:10'],
+                },
+              ],
+            },
+          ],
+        };
+
+    test('forSubline sends the subline and language', () async {
+      final emt = mockEmt((request) async {
+        expect(request.url.path, '/maas/api/v1/schedule/');
+        expect(request.url.queryParameters,
+            {'sublineCode': '1394', 'locale': 'ca'});
+        return jsonResponse([timetableJson()]);
+      });
+
+      final timetable =
+          (await emt.timetables.forSubline(subline, language: Language.ca))
+              .single;
+
+      expect(timetable.id, 2711);
+      expect(timetable.sublineId, 1394);
+      expect(timetable.startDate, DateTime(2026, 11, 9));
+      expect(timetable.endDate, isNull);
+      expect(timetable.morningInterval, const Duration(minutes: 15));
+      expect(timetable.afternoonInterval, isNull);
+
+      final days = timetable.days;
+      expect(days.code, 'NOC');
+      expect(days.name, 'Viernes, sábados y vísperas de festivo');
+      expect(days.weekdays, {DateTime.friday, DateTime.saturday});
+      expect(days.holidays, isFalse);
+      expect(days.holidayEves, isTrue);
+
+      final [outbound, back] = timetable.directions;
+      expect(outbound.routeId, 1559);
+      expect(outbound.direction, 1);
+      expect(outbound.comment, 'Referència de pas per pl. Espanya.');
+      expect(back.direction, 2);
+      expect(back.comment, isNull);
+      expect(back.runs.map((r) => r.fromStopId), [93, 50]);
+      expect(outbound.runs.single.toStopId, 93);
+    });
+
+    test('departures after midnight are past 24 hours', () async {
+      final emt = mockEmt((_) async => jsonResponse([timetableJson()]));
+
+      final timetable = (await emt.timetables.forSubline(subline)).single;
+
+      expect(timetable.directions.first.runs.single.departures, const [
+        Duration(hours: 23, minutes: 18),
+        Duration(hours: 23, minutes: 38),
+        Duration(hours: 24, minutes: 7),
+        Duration(hours: 27, minutes: 30),
+      ]);
+    });
+
+    test('forSubline is empty when the subline has no timetable', () async {
+      final emt = mockEmt((_) async => jsonResponse([], 404));
+
+      expect(await emt.timetables.forSubline(subline), isEmpty);
+    });
+
+    test('fromJson(toJson(x)) keeps every field', () {
+      final timetable = EmtTimetable.fromJson(timetableJson());
+
+      expect(EmtTimetable.fromJson(timetable.toJson()).toString(),
+          timetable.toString());
+    });
+  });
 }

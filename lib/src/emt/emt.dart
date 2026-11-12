@@ -5,10 +5,13 @@ import 'package:mallorca_transit_services/src/emt/emt_client.dart';
 import 'package:mallorca_transit_services/src/emt/models/emt_departure.dart';
 import 'package:mallorca_transit_services/src/emt/models/emt_line.dart';
 import 'package:mallorca_transit_services/src/emt/models/emt_stop.dart';
+import 'package:mallorca_transit_services/src/emt/models/emt_timetable.dart';
+import 'package:mallorca_transit_services/src/tib/models/language.dart';
 
 part 'emt_departures.dart';
 part 'emt_lines.dart';
 part 'emt_stops.dart';
+part 'emt_timetables.dart';
 
 /// Entry point to EMT, Palma's city buses.
 ///
@@ -20,6 +23,7 @@ class Emt {
   late final EmtStops stops = EmtStops._(this);
   late final EmtLines lines = EmtLines._(this);
   late final EmtDepartures departures = EmtDepartures._(this);
+  late final EmtTimetables timetables = EmtTimetables._(this);
 
   Emt({EmtClient? client}) : client = client ?? EmtClient();
 

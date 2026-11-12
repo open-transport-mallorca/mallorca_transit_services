@@ -34,3 +34,4 @@ export 'src/emt/emt_client.dart';
 export 'src/emt/models/emt_departure.dart';
 export 'src/emt/models/emt_line.dart';
 export 'src/emt/models/emt_stop.dart';
+export 'src/emt/models/emt_timetable.dart';
