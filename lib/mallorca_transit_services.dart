@@ -27,3 +27,8 @@ export 'src/tib/models/realtime/bus_position.dart';
 export 'src/tib/models/realtime/bus_stopped.dart';
 export 'src/tib/models/realtime/station_info.dart';
 export 'src/tib/models/realtime/connection_close.dart';
+
+// EMT
+export 'src/emt/emt.dart';
+export 'src/emt/emt_client.dart';
+export 'src/emt/models/emt_stop.dart';
