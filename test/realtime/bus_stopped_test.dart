@@ -30,7 +30,7 @@ void main() {
       expect(busStopped.long, -71.5678);
       expect(busStopped.speed, 35.5);
       expect(busStopped.delay, 5);
-      expect(busStopped.passangers, 20);
+      expect(busStopped.passengers, 20);
       expect(busStopped.stopName, 'Sample Stop');
       expect(busStopped.scheduledTime.hour, 8);
       expect(busStopped.scheduledTime.minute, 30);

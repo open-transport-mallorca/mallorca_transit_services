@@ -14,14 +14,14 @@ export 'src/tib/tib_client.dart';
 export 'src/messaging/transit_rss.dart';
 
 // Models
-export 'src/models/departure.dart';
-export 'src/models/station.dart';
-export 'src/models/route_line.dart';
+export 'src/tib/models/departure.dart';
+export 'src/tib/models/station.dart';
+export 'src/tib/models/route_line.dart';
 export 'src/models/transit_warning.dart';
 export 'src/models/transit_news.dart';
 
 // Realtime models
-export 'src/models/realtime/bus_position.dart';
-export 'src/models/realtime/bus_stopped.dart';
-export 'src/models/realtime/station_info.dart';
-export 'src/models/realtime/connection_close.dart';
+export 'src/tib/models/realtime/bus_position.dart';
+export 'src/tib/models/realtime/bus_stopped.dart';
+export 'src/tib/models/realtime/station_info.dart';
+export 'src/tib/models/realtime/connection_close.dart';

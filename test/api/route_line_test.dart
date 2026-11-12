@@ -243,7 +243,7 @@ void main() {
         ]
       });
 
-      final roundTripped = RouteLine.fromJson(RouteLine.toJson(original));
+      final roundTripped = RouteLine.fromJson(original.toJson());
 
       expect(roundTripped.active, original.active);
       expect(roundTripped.code, original.code);
@@ -301,6 +301,58 @@ void main() {
       expect(routeLine.color, 0xFFFF0000);
       expect(routeLine.type, LineType.bus);
       expect(routeLine.sublines, isNull);
+    });
+
+    test('fromJson parses every line type', () {
+      LineType typeOf(int typ) => RouteLine.fromJson({
+            'act': true,
+            'cod': 'X',
+            'id': 1,
+            'nam': 'X',
+            'color': '#000000',
+            'typ': typ
+          }).type;
+
+      expect([
+        for (var typ = 1; typ <= 6; typ++) typeOf(typ)
+      ], [
+        LineType.train,
+        LineType.metro,
+        LineType.bus,
+        LineType.urban,
+        LineType.shuttle,
+        LineType.unknown
+      ]);
+    });
+
+    test('fromJson parses endDate and a circular subline', () {
+      final line = RouteLine.fromJson({
+        'act': true,
+        'cod': 'X',
+        'id': 1,
+        'nam': 'X',
+        'color': '#000000',
+        'typ': 4,
+        'end': '2026-12-31T00:00:00',
+        'sublines': [
+          {
+            'vis': true,
+            'cod': 'X-1',
+            'id': 2,
+            'nam': 'X',
+            'dir': 'Circular',
+            'stops': []
+          }
+        ]
+      });
+
+      expect(line.endDate, DateTime(2026, 12, 31));
+      expect(line.sublines!.single.way, Way.circular);
+
+      final roundTripped = RouteLine.fromJson(line.toJson());
+      expect(roundTripped.type, LineType.urban);
+      expect(roundTripped.endDate, line.endDate);
+      expect(roundTripped.sublines!.single.way, Way.circular);
     });
   });
 }

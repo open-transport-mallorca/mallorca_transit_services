@@ -1,4 +1,4 @@
-/// Sent by the WebSocket when the bus reaches its final destination.
+/// Sent when a tracked bus reaches its destination.
 class ConnectionClose {
   @override
   String toString() =>

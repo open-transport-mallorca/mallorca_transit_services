@@ -25,7 +25,7 @@ void main() {
       expect(station.dropoffType, isNull);
       expect(station.town, isNull);
 
-      final json = Station.toJson(station);
+      final json = station.toJson();
       expect(json, {
         ...stationJson,
         'pickupType': null,
@@ -51,7 +51,7 @@ void main() {
       final station = Station.fromJson(stationJson);
       expect(station.town, 'sa Coma');
 
-      expect(Station.toJson(station), stationJson);
+      expect(station.toJson(), stationJson);
       expect(station.toString(), contains('town: sa Coma'));
     });
 
@@ -68,8 +68,8 @@ void main() {
         'dropoffType': 0
       });
       expect(dischargeOnly.town, 'sa Coma');
-      expect(dischargeOnly.pickupType, 1);
-      expect(dischargeOnly.dropoffType, 0);
+      expect(dischargeOnly.pickupType, PickupDropoffType.notAvailable);
+      expect(dischargeOnly.dropoffType, PickupDropoffType.regular);
       expect(dischargeOnly.isDischargeOnly, isTrue);
       expect(dischargeOnly.isPickupOnly, isFalse);
 
@@ -94,6 +94,41 @@ void main() {
       expect(normal.town, isNull);
       expect(normal.isDischargeOnly, isFalse);
       expect(normal.isPickupOnly, isFalse);
+    });
+
+    test('fromJson parses the arranged types and keeps their values', () {
+      final json = {
+        'cod': '1',
+        'id': 1,
+        'lat': 0.0,
+        'lon': 0.0,
+        'nam': 'Arranged',
+        'ref': null,
+        'parent': null,
+        'pickupType': 2,
+        'dropoffType': 3
+      };
+
+      final station = Station.fromJson(json);
+
+      expect(station.pickupType, PickupDropoffType.phoneAgency);
+      expect(station.dropoffType, PickupDropoffType.coordinateWithDriver);
+      expect(station.isDischargeOnly, isFalse);
+      expect(station.isPickupOnly, isFalse);
+      expect(station.toJson(), json);
+    });
+
+    test('fromJson reads an unexpected value as unknown', () {
+      final station = Station.fromJson({
+        'cod': '1',
+        'id': 1,
+        'lat': 0.0,
+        'lon': 0.0,
+        'nam': 'Odd',
+        'pickupType': 7
+      });
+
+      expect(station.pickupType, PickupDropoffType.unknown);
     });
   });
 }
