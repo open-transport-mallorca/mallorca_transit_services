@@ -19,4 +19,14 @@ class EmtStops {
     final response = await _emt._getOrNull(url);
     return response == null ? null : EmtStop.fromJson(Emt._json(response));
   }
+
+  /// The lines stopping at the stop with [id], in EMT's display order.
+  Future<List<EmtLine>> lines(int id) async {
+    final url = _emt.client.url('agency/stops/$id/lines');
+    final ids = {
+      for (final Map line in Emt._json(await _emt._get(url))) line['id']
+    };
+    final lines = await _emt.lines.all();
+    return lines.where((line) => ids.contains(line.id)).toList();
+  }
 }

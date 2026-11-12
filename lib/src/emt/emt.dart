@@ -1,8 +1,11 @@
 import 'dart:convert';
 import 'package:http/http.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:mallorca_transit_services/src/emt/emt_client.dart';
+import 'package:mallorca_transit_services/src/emt/models/emt_line.dart';
 import 'package:mallorca_transit_services/src/emt/models/emt_stop.dart';
 
+part 'emt_lines.dart';
 part 'emt_stops.dart';
 
 /// Entry point to EMT, Palma's city buses.
@@ -13,6 +16,7 @@ class Emt {
   final EmtClient client;
 
   late final EmtStops stops = EmtStops._(this);
+  late final EmtLines lines = EmtLines._(this);
 
   Emt({EmtClient? client}) : client = client ?? EmtClient();
 
