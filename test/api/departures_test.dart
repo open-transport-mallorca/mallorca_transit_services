@@ -9,6 +9,7 @@ Map<String, dynamic> departureJson({Map? realTrip}) => {
       'dtn': 'Palma',
       'aet': '2026-07-20T18:55:00.000',
       'lcod': 'A51',
+      'line_id': 3121,
       'trip_id': 659865,
       'snam': 'Palma - Campos',
       'dem': true,
@@ -57,6 +58,7 @@ void main() {
       expect(departure.tripId, 659865);
       expect(departure.onDemand, isTrue);
       expect(departure.lineCode, 'A51');
+      expect(departure.lineId, 3121);
       expect(departure.origin, 'Palma');
       expect(departure.destination, 'Campos');
       expect(departure.lineColor, '#28689D');
@@ -97,6 +99,63 @@ void main() {
 
     test('toJson writes null for an untracked departure', () {
       expect(Departure.fromJson(departureJson()).toJson()['realTrip'], isNull);
+    });
+
+    test('fromJson parses the SICTMWS date format', () {
+      final departure = Departure.fromJson({
+        'aet': '2026-11-12 21:25:00',
+        'dem': false,
+        'dt': '1970-01-01 20:25:00',
+        'lcod': '401',
+        'line_id': 3066,
+        'snam': 'Palma - Cala Millor',
+        'trip_id': 710148,
+      });
+
+      expect(departure.scheduledArrival, DateTime(2026, 11, 12, 21, 25));
+      expect(departure.tripDepartureTime, DateTime(1970, 1, 1, 20, 25));
+    });
+  });
+
+  group('BayDeparture', () {
+    final json = {
+      'codi_linia': '401',
+      'concatenacio_parades': 'Palma > Montuïri > Manacor > Cala Millor',
+      'darsena': '14<br>16',
+      'horapas': '1970-01-01T08:05:00',
+      'id_expedicio': 710146,
+      'nom_nucli_arribada': 'Cala Millor',
+      'tipus': 'bus',
+    };
+
+    test('fromJson maps every field onto the date', () {
+      final departure =
+          BayDeparture.fromJson(json, date: DateTime(2026, 11, 13, 7));
+
+      expect(departure.tripId, 710146);
+      expect(departure.lineCode, '401');
+      expect(departure.type, LineType.bus);
+      expect(departure.time, DateTime(2026, 11, 13, 8, 5));
+      expect(departure.destination, 'Cala Millor');
+      expect(departure.via, ['Palma', 'Montuïri', 'Manacor', 'Cala Millor']);
+      expect(departure.bays, ['14', '16']);
+    });
+
+    test('fromJson reads trains and a missing bay', () {
+      final departure = BayDeparture.fromJson(
+          {...json, 'tipus': 'tren', 'darsena': null},
+          date: DateTime(2026, 11, 13));
+
+      expect(departure.type, LineType.train);
+      expect(departure.bays, isEmpty);
+    });
+
+    test('fromJson(toJson(x)) keeps every field without a date', () {
+      final departure =
+          BayDeparture.fromJson(json, date: DateTime(2026, 11, 13));
+
+      expect(BayDeparture.fromJson(departure.toJson()).toString(),
+          departure.toString());
     });
   });
 }

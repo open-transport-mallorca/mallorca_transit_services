@@ -503,6 +503,71 @@ void main() {
       expect(departures.map((d) => d.name), ['Departure 1', 'Departure 2']);
     });
 
+    test('at requests the time and lines', () async {
+      final time = DateTime(2026, 11, 13, 8);
+      final tib = mockTib((request) async {
+        expect(request.url.path, '/sictmws/stops/ctmr4/33008/next-departures');
+        expect(request.url.queryParametersAll, {
+          'ts': ['${time.millisecondsSinceEpoch}'],
+          'res': ['5'],
+          'lin': ['411', '417'],
+        });
+        return jsonResponse({
+          'nextDeparturesInfo': [
+            {
+              'aet': '2026-11-13 08:33:00',
+              'dem': false,
+              'dt': '1970-01-01 08:00:00',
+              'lcod': '417',
+              'line_id': 3072,
+              'snam': 'Son Carrió - Manacor - Porreres',
+              'trip_id': 682153,
+            }
+          ],
+          'pag': {'cur': 1, 'nxt': 2},
+        });
+      });
+
+      final departures = await tib.departures
+          .at('33008', time, count: 5, lineCodes: ['411', '417']);
+
+      expect(departures.single.scheduledArrival, DateTime(2026, 11, 13, 8, 33));
+      expect(departures.single.lineId, 3072);
+    });
+
+    test('at returns an empty list for an unknown station', () async {
+      final tib =
+          mockTib((_) async => http.Response('Entitat no trobada', 404));
+
+      expect(await tib.departures.at('9999999', DateTime.now()), isEmpty);
+    });
+
+    test('withBays returns the board on the given day', () async {
+      final time = DateTime(2026, 11, 13, 7);
+      final tib = mockTib((request) async {
+        expect(request.url.path,
+            '/sictmws/stops/ctmr4/40036/next-departures-dock');
+        expect(request.url.queryParameters['ts'],
+            '${time.millisecondsSinceEpoch}');
+        return jsonResponse([
+          {
+            'codi_linia': '202',
+            'concatenacio_parades': 'Palma > Esporles',
+            'darsena': '5',
+            'horapas': '1970-01-01T08:00:00',
+            'id_expedicio': 579923,
+            'nom_nucli_arribada': 'Esporles',
+            'tipus': 'bus',
+          }
+        ]);
+      });
+
+      final board = await tib.departures.withBays('40036', at: time);
+
+      expect(board.single.time, DateTime(2026, 11, 13, 8));
+      expect(board.single.bays, ['5']);
+    });
+
     test('next returns an empty list when there are none', () async {
       final tib = mockTib((_) async => http.Response('[]', 200));
 

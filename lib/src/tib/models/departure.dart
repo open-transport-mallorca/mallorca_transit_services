@@ -23,6 +23,9 @@ class Departure {
 
   String lineCode;
 
+  /// See [RouteLine.id]. Only set on departures from [TibDepartures.at].
+  int? lineId;
+
   /// Town the trip starts in.
   String? origin;
 
@@ -41,6 +44,7 @@ class Departure {
       this.realTrip,
       required this.onDemand,
       required this.lineCode,
+      this.lineId,
       this.origin,
       this.destination,
       this.lineColor});
@@ -54,7 +58,7 @@ class Departure {
 
   @override
   String toString() {
-    return 'Departure{scheduledArrival: $scheduledArrival, tripDepartureTime: $tripDepartureTime, tripArrivalTime: $tripArrivalTime, name: $name, tripId: $tripId, realTrip: $realTrip, onDemand: $onDemand, lineCode: $lineCode, origin: $origin, destination: $destination, lineColor: $lineColor}';
+    return 'Departure{scheduledArrival: $scheduledArrival, tripDepartureTime: $tripDepartureTime, tripArrivalTime: $tripArrivalTime, name: $name, tripId: $tripId, realTrip: $realTrip, onDemand: $onDemand, lineCode: $lineCode, lineId: $lineId, origin: $origin, destination: $destination, lineColor: $lineColor}';
   }
 
   factory Departure.fromJson(Map json) {
@@ -70,6 +74,7 @@ class Departure {
             : null,
         onDemand: json['dem'],
         lineCode: json['lcod'],
+        lineId: json['line_id'],
         origin: json['dtn'],
         destination: json['etn'],
         lineColor: json['lineColor']);
@@ -85,6 +90,7 @@ class Departure {
       'realTrip': realTrip?.toJson(),
       'dem': onDemand,
       'lcod': lineCode,
+      'line_id': lineId,
       'dtn': origin,
       'etn': destination,
       'lineColor': lineColor

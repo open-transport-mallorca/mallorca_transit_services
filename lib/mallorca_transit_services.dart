@@ -12,6 +12,7 @@ export 'src/tib/tib_client.dart';
 
 // Models
 export 'src/tib/models/departure.dart';
+export 'src/tib/models/bay_departure.dart';
 export 'src/tib/models/station.dart';
 export 'src/tib/models/route_line.dart';
 export 'src/tib/models/timetable.dart';

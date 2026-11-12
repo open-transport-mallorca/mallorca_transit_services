@@ -4,6 +4,7 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'package:http/http.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:mallorca_transit_services/src/tib/models/bay_departure.dart';
 import 'package:mallorca_transit_services/src/tib/models/departure.dart';
 import 'package:mallorca_transit_services/src/tib/models/language.dart';
 import 'package:mallorca_transit_services/src/tib/models/realtime/bus_position.dart';

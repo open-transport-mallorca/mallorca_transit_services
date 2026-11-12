@@ -69,8 +69,9 @@ class TibClient extends BaseClient {
         return null;
       });
 
-  /// [path] under the SICTMWS base URL, e.g. `lines/ctmr4/A42`.
-  Future<Uri> sictmws(String path, [Map<String, String>? query]) async {
+  /// [path] under the SICTMWS base URL, e.g. `lines/ctmr4/A42`. A [query]
+  /// value can be a list, to repeat the parameter.
+  Future<Uri> sictmws(String path, [Map<String, Object>? query]) async {
     final base = (await config)?.sictmwsUrl ?? TibConfig.defaultSictmwsUrl;
     final basePath = base.path.endsWith('/')
         ? base.path.substring(0, base.path.length - 1)
