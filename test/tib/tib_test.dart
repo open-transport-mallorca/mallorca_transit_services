@@ -251,44 +251,106 @@ void main() {
 
       expect(await tib.lines.byCode('ZZZ'), isNull);
     });
+  });
 
-    test('pdfTimetable picks the most recent timetable', () async {
+  group('TibTimetables', () {
+    Map timetable(String start, {String? end}) => {
+          'id': 'dxp-ctmr4-$start',
+          'name': 'L401, des de $start',
+          'lineId': 3066,
+          'lineCode': '401',
+          'startDate': '${start}T00:00:00',
+          if (end != null) 'endDate': '${end}T00:00:00',
+          'special': false,
+          'url': 'https://www.tib.org/documents/$start.pdf',
+          'creationDate': '2026-01-01T12:00:00',
+          'modificationDate': '2026-01-01T12:00:00',
+        };
+
+    test('all requests the entity without old timetables', () async {
       final tib = mockTib((request) async {
-        if (request.url.host == 'api.tib.org') {
-          return http.Response(jsonEncode(lineJson('B42', id: 3066)), 200);
-        }
-        expect(request.url.path, '/o/manager/schedules/3066');
+        expect(request.url.path, '/sictmws/timetables/ctmr4');
+        expect(request.url.queryParameters,
+            {'cur': 'true', 'fut': 'true', 'old': 'false'});
+        return http.Response(jsonEncode([timetable('2026-11-01')]), 200);
+      });
+
+      expect((await tib.timetables.all()).single.lineCode, '401');
+    });
+
+    test('forLine returns the line\'s timetables newest first', () async {
+      final tib = mockTib((request) async {
+        expect(request.url.path, '/sictmws/timetables');
+        expect(request.url.queryParameters['lid'], '3066');
+        expect(request.url.queryParameters['old'], 'true');
         return http.Response(
-            jsonEncode([
-              for (final (date, file) in [
-                ('2025-04-01', 'old'),
-                ('2026-03-27', 'latest'),
-                ('2025-11-01', 'middle'),
-              ])
-                {
-                  'JSONObject': {
-                    'FechaDeInicioDeValidez': date,
-                    'urlScheduleFile': '/documents/20124/$file.pdf',
-                  }
-                }
-            ]),
+            jsonEncode([timetable('2025-11-01'), timetable('2026-11-01')]),
             200);
       });
 
-      expect((await tib.lines.pdfTimetable('B42')).toString(),
-          'https://www.tib.org/documents/20124/latest.pdf');
+      final timetables = await tib.timetables.forLine(3066, includeOld: true);
+
+      expect(timetables.map((t) => t.startDate),
+          [DateTime(2026, 11, 1), DateTime(2025, 11, 1)]);
     });
 
-    test('pdfTimetable returns null without timetables', () async {
-      final tib = mockTib((_) async => http.Response('[]', 200));
+    group('current', () {
+      Tib tibWith(List<Map> timetables) =>
+          mockTib((_) async => http.Response(jsonEncode(timetables), 200));
 
-      expect(await tib.lines.pdfTimetable('B42', lineId: 3066), isNull);
-    });
+      test('picks the newest started timetable', () async {
+        final tib = tibWith([
+          timetable('2025-11-01'),
+          timetable('2026-11-01'),
+          timetable('2027-01-01'),
+        ]);
 
-    test('pdfTimetable returns null for an unknown line', () async {
-      final tib = mockTib((_) async => http.Response('', 404));
+        final current =
+            await tib.timetables.current(3066, at: DateTime(2026, 11, 12));
 
-      expect(await tib.lines.pdfTimetable('ZZZ'), isNull);
+        expect(current!.startDate, DateTime(2026, 11, 1));
+      });
+
+      test('includes the last day of a seasonal timetable', () async {
+        final tib = tibWith([timetable('2026-03-27', end: '2026-10-31')]);
+
+        final current =
+            await tib.timetables.current(3066, at: DateTime(2026, 10, 31, 23));
+
+        expect(current, isNotNull);
+      });
+
+      test('falls back past an ended seasonal timetable', () async {
+        final tib = tibWith([
+          timetable('2025-11-01'),
+          timetable('2026-03-27', end: '2026-10-31'),
+        ]);
+
+        final current =
+            await tib.timetables.current(3066, at: DateTime(2026, 11, 12));
+
+        expect(current!.startDate, DateTime(2025, 11, 1));
+      });
+
+      test('finds a timetable in the past', () async {
+        final tib = mockTib((request) async {
+          expect(request.url.queryParameters['old'], 'true');
+          return http.Response(
+              jsonEncode([timetable('2026-03-27', end: '2026-10-31')]), 200);
+        });
+
+        final current =
+            await tib.timetables.current(3066, at: DateTime(2026, 7, 1));
+
+        expect(current, isNotNull);
+      });
+
+      test('returns null out of season', () async {
+        final tib = tibWith([timetable('2026-03-27', end: '2026-10-31')]);
+
+        expect(await tib.timetables.current(3066, at: DateTime(2026, 11, 12)),
+            isNull);
+      });
     });
   });
 

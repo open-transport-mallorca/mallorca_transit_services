@@ -1,6 +1,6 @@
 part of 'tib.dart';
 
-/// TIB's lines, their sublines and timetables.
+/// TIB's lines and their sublines.
 class TibLines {
   final Tib _tib;
 
@@ -41,24 +41,5 @@ class TibLines {
         'lines/${_tib.entity}/${subline.parentLine.code}/kmz/${subline.code}');
     final response = await _tib._get(url);
     return RoutePath.fromKmz(utf8.decode(response.bodyBytes), subline);
-  }
-
-  /// The latest PDF timetable of the line with [code]. `null` if there is none.
-  Future<Uri?> pdfTimetable(String code, {int? lineId}) async {
-    lineId ??= (await byCode(code))?.id;
-    if (lineId == null) return null;
-
-    final response = await _tib._get(Uri.parse(
-        'https://www.tib.org/o/manager/schedules/$lineId?groupId=20124'));
-    final List schedules = Tib._json(response);
-    if (schedules.isEmpty) return null;
-
-    final latest = schedules.reduce((a, b) {
-      final dateA = a['JSONObject']['FechaDeInicioDeValidez'] as String;
-      final dateB = b['JSONObject']['FechaDeInicioDeValidez'] as String;
-      return dateA.compareTo(dateB) >= 0 ? a : b;
-    });
-    return Uri.parse(
-        "https://www.tib.org${latest['JSONObject']['urlScheduleFile']}");
   }
 }

@@ -43,9 +43,9 @@ void main() async {
   print(news.first.title);
   print(news.first.paragraphs);
 
-  // Get the link to the PDF Timetable of line A42
-  final timetablePdf = await tib.lines.pdfTimetable('A42');
-  print(timetablePdf);
+  // Get the PDF timetable line 401 runs on today
+  final timetable = await tib.timetables.current(3066);
+  print(timetable?.url);
 
   // Listen to real-time bus updates
   // For example, take the first departure that has tracking info
