@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:test/test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:mallorca_transit_services/mallorca_transit_services.dart';
 import 'package:stream_channel/stream_channel.dart';
 
@@ -125,6 +127,90 @@ void main() {
       final lines = await tib.stations.lines('123');
 
       expect(lines.map((l) => l.code), ['A', 'B']);
+    });
+  });
+
+  group('TibStations by id, area and photo', () {
+    test('byId returns the station', () async {
+      final tib = mockTib((request) async {
+        expect(request.url.path, '/sictmws/stops/id/456');
+        return http.Response(jsonEncode(stationJson('123')), 200);
+      });
+
+      expect((await tib.stations.byId(456))!.code, '123');
+    });
+
+    test('byId returns null for an unknown id', () async {
+      final tib = mockTib((_) async => http.Response('', 404));
+
+      expect(await tib.stations.byId(9999999), isNull);
+    });
+
+    test('inArea requests every station in the rectangle', () async {
+      final tib = mockTib((request) async {
+        expect(request.url.path, '/sictmws/stops/ctmr4/between');
+        expect(request.url.queryParameters, {
+          'latSW': '39.56',
+          'lngSW': '2.64',
+          'latNE': '39.58',
+          'lngNE': '2.66',
+          'res': '-1',
+        });
+        return http.Response(
+            jsonEncode({
+              'stopsInfo': [stationJson('1')]
+            }),
+            200);
+      });
+
+      final stations =
+          await tib.stations.inArea(LatLng(39.56, 2.64), LatLng(39.58, 2.66));
+
+      expect(stations.single.code, '1');
+    });
+
+    test('near returns the stations within the radius, nearest first',
+        () async {
+      Map at(String code, double lat, double lng) =>
+          {...stationJson(code), 'lat': lat, 'lon': lng};
+      final tib = mockTib((request) async {
+        final query = request.url.queryParameters;
+        // About 500 m either way of the point.
+        expect(double.parse(query['latSW']!), closeTo(39.5655, 0.0005));
+        expect(double.parse(query['latNE']!), closeTo(39.5745, 0.0005));
+        expect(double.parse(query['lngSW']!), closeTo(2.6442, 0.0005));
+        expect(double.parse(query['lngNE']!), closeTo(2.6558, 0.0005));
+        return http.Response(
+            jsonEncode({
+              'stopsInfo': [
+                at('far', 39.5735, 2.6500), // ~390 m
+                at('corner', 39.5740, 2.6555), // in the box, ~650 m
+                at('close', 39.5705, 2.6500), // ~55 m
+              ]
+            }),
+            200);
+      });
+
+      final stations = await tib.stations.near(LatLng(39.57, 2.65));
+
+      expect(stations.map((s) => s.code), ['close', 'far']);
+    });
+
+    test('photo returns the image bytes', () async {
+      final tib = mockTib((request) async {
+        expect(request.url.path, '/sictmws/stops/id/1600/photo');
+        return http.Response.bytes([0xFF, 0xD8, 0xFF], 200,
+            headers: {'content-type': 'image/jpeg'});
+      });
+
+      expect(await tib.stations.photo(1600),
+          Uint8List.fromList([0xFF, 0xD8, 0xFF]));
+    });
+
+    test('photo returns null for a station without one', () async {
+      final tib = mockTib((_) async => http.Response('', 404));
+
+      expect(await tib.stations.photo(1821), isNull);
     });
   });
 

@@ -34,7 +34,8 @@ class Station {
   double long;
   String name;
 
-  /// TIB's reference for the stop. Only set on stops from [TibStations].
+  /// Direction the stop serves, e.g. `Sentit cap a Cala Bona`. Only set on
+  /// stops from [TibStations].
   String? ref;
 
   /// Whether passengers can board here. Only set on a [Subline]'s stops.
