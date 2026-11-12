@@ -25,8 +25,8 @@ void main() async {
   final allRoutes = await tib.lines.all();
   print(allRoutes);
 
-  // Get the list of the line A42 (as an example)
-  final route = await tib.lines.byCode('A42');
+  // Get the sublines of line 401 (as an example)
+  final route = await tib.lines.byCode('401');
   final sublines = await tib.lines.sublines(route!);
   print(sublines);
 

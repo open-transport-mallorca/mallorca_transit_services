@@ -18,118 +18,129 @@ dependencies:
 
 ## Usage
 
-Get the list of bus stops:
+Everything goes through a `Tib` instance. Create one and reuse it, as it
+fetches TIB's API key once and caches it:
 
 ```dart
-await Stations.getStations();
+final tib = Tib();
 ```
 
-Get the list of departures from a specific bus stop:
+### Stations
+
+Points are `LatLng` from [latlong2](https://pub.dev/packages/latlong2):
 
 ```dart
-await Departures.getDepartures(stationId: id, numberOfDepartures: 10);
+await tib.stations.all();
+await tib.stations.byCode('40036');
+await tib.stations.byId(984);
+await tib.stations.near(LatLng(39.5763, 2.6541), radius: 300);
+await tib.stations.inArea(southWest, northEast);
+await tib.stations.lines('40036'); // the lines serving it
+await tib.stations.photo(984); // image bytes, or null
 ```
 
-Get a list of lines that pass through a specific bus stop:
+### Departures
 
 ```dart
-await Station.getLines(stationCode);
+// Live, with `realTrip` for buses that can be tracked.
+await tib.departures.next('40036', count: 10);
+
+// From the timetable, at any time.
+await tib.departures.at('40036', DateTime(2026, 12, 24, 18));
+
+// A bus or train station's board, with the bays.
+await tib.departures.withBays('40036');
 ```
 
-Get the list of all lines:
+### Lines
 
 ```dart
-await RouteLine.getAllLines();
+final lines = await tib.lines.all(activeOnly: true);
+final line = (await tib.lines.byCode('401'))!;
+final sublines = await tib.lines.sublines(line);
+final path = await tib.lines.path(sublines.first);
 ```
 
-Get specific line information:
+### Timetables
+
+Timetables are PDFs. A line can have several, e.g. a seasonal one, so
+`current` picks the one in effect:
 
 ```dart
-await RouteLine.getLine('A42');
+await tib.timetables.forLine(line.id); // newest first
+final timetable = await tib.timetables.current(line.id);
+print(timetable?.url);
 ```
 
-Get the route of a specific line:
+### Trips
+
+A trip is one run of a bus, with its stop times:
 
 ```dart
-await RoutePath.getPath(route.code);
+await tib.trips.all(); // today's trips
+await tib.trips.forLine('401', date: DateTime(2026, 12, 24));
+await tib.trips.forSubline('L401-1');
+final trip = await tib.trips.byId(departure.tripId);
+print(trip?.stops);
 ```
 
-Listen to real-time updates of a specific bus:
+### Towns
 
 ```dart
-LocationWebSocket.locationStream(busId).then((stream) {
-    stream.listen((message) {
-      final action = LocationWebSocket.locationParser(jsonDecode(message));
-    });
-  });
+final towns = await tib.towns.all();
+await tib.towns.stations(towns.first.id);
 ```
 
-Get the public service warnings:
+### Warnings and news
+
+Both come in Catalan, Spanish, English or German:
 
 ```dart
-final warnings = await TransitRss.getWarnings();
+final warnings = await tib.warnings.all(language: Language.en);
+print(warnings.first.affectedLineIds); // compare to RouteLine.id
+print(warnings.first.documentUrl); // the attached PDF, if any
+
+final news = await tib.news.all(language: Language.en); // newest first
+print(news.first.paragraphs);
 ```
 
-Each warning carries an `id`, a `title`, a `link`, and a `published` `DateTime`.
-Its description, affected lines and attached document live on its page, so
-they are fetched separately - in a single request:
+### Real-time tracking
+
+Follow a bus from a live departure's `realTrip`:
 
 ```dart
-await TransitWarningScraper.fetchDetails(warning);
-print(warning.description);
-print(warning.affectedLines); // ['231', '302', 'A32']
-print(warning.documentUrl); // the attached PDF, if the page has one
+final subscription = tib.realtime.track(departure.realTrip!.id).listen((event) {
+  switch (event) {
+    case BusPosition position:
+      print(position);
+    case BusStopped stopped:
+      print(stopped);
+    case RouteStationInfo info:
+      print(info);
+    case ConnectionClose():
+      print('Trip ended');
+  }
+});
+
+// Closes the socket.
+await subscription.cancel();
 ```
 
-The line codes are normalised: warning pages print `L231`, `LA32` and `L411e`,
-but `affectedLines` gives `231`, `A32` and `411e`, so they can be compared to
-`RouteLine.code` and `Departure.lineCode` directly.
+### Errors
 
-Get the public news:
+Requests that fail throw a `TibException` with the status code and URL.
+Lookups like `byCode` and `byId` return `null` instead when nothing is found.
 
-```dart
-final news = await TransitRss.getNews();
-await NewsScraper.fetchDetails(news.first); // fills paragraphs and imageUrl
-```
+### HTTP client
 
-The scrapers take a page URL, so a cached warning can be refreshed without
-keeping the feed item around:
-
-```dart
-await TransitWarningScraper.affectedLines(url);
-await TransitWarningScraper.description(url);
-await TransitWarningScraper.documentUrl(url);
-await NewsScraper.description(url);
-```
-
-The `RssItem`-taking forms (`scrapeAffectedLines`, `scrapeWarningDescription`,
-`scrapeNewsDescription`, `scrapeNewsImage`) still work but are deprecated, and
-go in 3.0.0. Note `scrapeAffectedLines` keeps the `L` prefix.
-
-The raw `dart_rss` feeds are still available if you need a field the models do
-not carry:
-
-```dart
-await TransitRss.getWarningFeed();
-await TransitRss.getNewsFeed();
-```
-
-Scrape the website for the timetable PDF of a specific line:
-
-```dart
-await RouteLine.getPdfTimetable('A42');
-```
-
-### API key
-
-TIB's stops and lines service needs an API key. The package handles it: it reads
-the public key tib.org's own frontend uses, caches it, and sends it with every
-request through `TibClient.shared`, the default `httpClient` of every API class.
 To route requests through your own client, wrap it:
 
 ```dart
-StationsApi.httpClient = TibClient(inner: myClient);
+final tib = Tib(client: TibClient(inner: myClient));
 ```
+
+Models have `toJson`, and `fromJson(toJson())` gives the same object back, so
+they can be cached.
 
 The full example can be found in the [example.dart](example/example.dart)
 
