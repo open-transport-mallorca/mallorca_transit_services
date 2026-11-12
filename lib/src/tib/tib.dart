@@ -14,6 +14,7 @@ import 'package:mallorca_transit_services/src/tib/models/route_line.dart';
 import 'package:mallorca_transit_services/src/tib/models/station.dart';
 import 'package:mallorca_transit_services/src/tib/models/timetable.dart';
 import 'package:mallorca_transit_services/src/tib/models/town.dart';
+import 'package:mallorca_transit_services/src/tib/models/trip.dart';
 import 'package:mallorca_transit_services/src/tib/models/transit_news.dart';
 import 'package:mallorca_transit_services/src/tib/models/transit_warning.dart';
 import 'package:mallorca_transit_services/src/tib/tib_client.dart';
@@ -27,6 +28,7 @@ part 'tib_realtime.dart';
 part 'tib_stations.dart';
 part 'tib_timetables.dart';
 part 'tib_towns.dart';
+part 'tib_trips.dart';
 part 'tib_warnings.dart';
 
 /// Entry point to TIB, Mallorca's interurban buses.
@@ -49,6 +51,7 @@ class Tib {
   late final TibNews news = TibNews._(this);
   late final TibTimetables timetables = TibTimetables._(this);
   late final TibTowns towns = TibTowns._(this);
+  late final TibTrips trips = TibTrips._(this);
 
   Tib(
       {TibClient? client,

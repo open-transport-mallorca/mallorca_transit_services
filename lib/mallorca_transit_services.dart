@@ -16,6 +16,7 @@ export 'src/tib/models/station.dart';
 export 'src/tib/models/route_line.dart';
 export 'src/tib/models/timetable.dart';
 export 'src/tib/models/town.dart';
+export 'src/tib/models/trip.dart';
 export 'src/tib/models/language.dart';
 export 'src/tib/models/transit_warning.dart';
 export 'src/tib/models/transit_news.dart';

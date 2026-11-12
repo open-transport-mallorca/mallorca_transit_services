@@ -22,6 +22,11 @@ Tib mockTib(Future<http.Response> Function(http.Request request) handler,
           inner: MockClient(handler)));
 }
 
+/// [body] as JSON, encoded as UTF-8 like TIB's responses.
+http.Response jsonResponse(Object? body) =>
+    http.Response.bytes(utf8.encode(jsonEncode(body)), 200,
+        headers: {'content-type': 'application/json; charset=utf-8'});
+
 Map lineJson(String code, {bool active = true, int id = 1}) => {
       'act': active,
       'cod': code,
@@ -358,15 +363,12 @@ void main() {
     test('all returns every town', () async {
       final tib = mockTib((request) async {
         expect(request.url.path, '/sictmws/towns/ctmr4');
-        return http.Response(
-            jsonEncode({
-              'town': [
-                {'id': 114, 'nam': 'Alaró'},
-                {'id': 98, 'nam': 'Alcúdia'}
-              ]
-            }),
-            200,
-            headers: {'content-type': 'application/json; charset=utf-8'});
+        return jsonResponse({
+          'town': [
+            {'id': 114, 'nam': 'Alaró'},
+            {'id': 98, 'nam': 'Alcúdia'}
+          ]
+        });
       });
 
       final towns = await tib.towns.all();
@@ -407,6 +409,69 @@ void main() {
               : http.Response(jsonEncode({'stopsInfo': []}), 200));
 
       expect(await tib.towns.stations(999999), isEmpty);
+    });
+  });
+
+  group('TibTrips', () {
+    Map trip(int id, String time, String line) => {
+          'dem': false,
+          'dep_t': time,
+          'route': {'codi': line, 'nom': 'Line $line'},
+          'stp_cod': '40036',
+          'stp_nam': 'Estació Intermodal',
+          'sublinea': 'L$line-1',
+          'trip_id': id,
+        };
+
+    test('all requests the date and sorts by departure', () async {
+      final tib = mockTib((request) async {
+        expect(request.url.path, '/sictmws/trips/ctmr4');
+        expect(request.url.queryParameters, {'dat': '2026-11-05'});
+        return jsonResponse(
+            [trip(2, '09:00:00', '401'), trip(1, '07:00:00', '102')]);
+      });
+
+      final trips = await tib.trips.all(date: DateTime(2026, 11, 5, 18));
+
+      expect(trips.map((t) => t.id), [1, 2]);
+      expect(trips.first.departureTime, DateTime(2026, 11, 5, 7));
+    });
+
+    test('forLine keeps the line\'s trips', () async {
+      final tib = mockTib((_) async => jsonResponse([
+            trip(1, '07:00:00', '401'),
+            trip(2, '08:00:00', '102'),
+            trip(3, '09:00:00', '401'),
+          ]));
+
+      final trips = await tib.trips.forLine('401');
+
+      expect(trips.map((t) => t.id), [1, 3]);
+    });
+
+    test('forSubline requests the subline', () async {
+      final tib = mockTib((request) async {
+        expect(request.url.path, '/sictmws/trips/ctmr4/L401-1');
+        return jsonResponse([trip(1, '13:40:00', '401')]);
+      });
+
+      expect((await tib.trips.forSubline('L401-1')).single.id, 1);
+    });
+
+    test('byId returns the trip', () async {
+      final tib = mockTib((request) async {
+        expect(request.url.path, '/sictmws/trips/id/710119');
+        return jsonResponse(
+            {'dep_t': '07:35:00', 'trip_id': 710119, 'stops': []});
+      });
+
+      expect((await tib.trips.byId(710119))!.stops, isEmpty);
+    });
+
+    test('byId returns null for an unknown id', () async {
+      final tib = mockTib((_) async => http.Response('', 404));
+
+      expect(await tib.trips.byId(1), isNull);
     });
   });
 
