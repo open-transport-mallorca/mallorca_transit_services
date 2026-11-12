@@ -1,81 +1,8 @@
 import 'dart:convert';
 import 'package:test/test.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
 import 'package:mallorca_transit_services/mallorca_transit_services.dart';
 
 void main() {
-  group('DeparturesApi.getDepartures', () {
-    test('returns list of departures when the API call is successful',
-        () async {
-      final mockHttpClient = MockClient((request) async {
-        return http.Response(
-            jsonEncode([
-              {
-                "dt": "1970-01-01T10:12:00",
-                "aet": "2024-05-24T11:39:00",
-                "snam": "Departure 1",
-                "trip_id": 558719,
-                "lineColor": "401",
-                "dem": false,
-                "lcod": "401",
-                "etn": "Manacor",
-                "dtn": null,
-                "et": "1970-01-01T11:55:00"
-              },
-              {
-                "dt": "1970-01-01T11:20:00",
-                "aet": "2024-05-24T11:42:00",
-                "snam": "Departure 2",
-                "trip_id": 554303,
-                "lineColor": "424",
-                "dem": false,
-                "lcod": "424",
-                "etn": "Cala Rajada",
-                "dtn": null,
-                "et": "1970-01-01T12:45:00"
-              }
-            ]),
-            200);
-      });
-
-      DeparturesApi.httpClient = mockHttpClient;
-
-      final departures = await DeparturesApi.getDepartures(
-          stationCode: "123", numberOfDepartures: 2);
-
-      expect(departures, isA<List<Departure>>());
-      expect(departures.length, 2);
-      expect(departures[0].name, 'Departure 1');
-    });
-
-    test('throws FormatException when the station code is invalid', () async {
-      final mockHttpClient = MockClient((request) async {
-        throw FormatException("Invalid format");
-      });
-
-      DeparturesApi.httpClient = mockHttpClient;
-
-      expect(
-          () async => await DeparturesApi.getDepartures(
-              stationCode: "123", numberOfDepartures: 2),
-          throwsA(isA<FormatException>()));
-    });
-
-    test('throws Exception when there are no departures found', () async {
-      final mockHttpClient = MockClient((request) async {
-        return http.Response('[]', 200);
-      });
-
-      DeparturesApi.httpClient = mockHttpClient;
-
-      expect(
-          () async => await DeparturesApi.getDepartures(
-              stationCode: "123", numberOfDepartures: 2),
-          throwsA(isA<Exception>()));
-    });
-  });
-
   group('RealTrip', () {
     test('fromJson creates a RealTrip object from JSON', () {
       final jsonMap = {

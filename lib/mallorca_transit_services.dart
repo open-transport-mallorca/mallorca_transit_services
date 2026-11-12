@@ -6,11 +6,9 @@
 ///
 library mallorca_transit_services;
 
-// APIs
-export 'src/api/departures_api.dart';
-export 'src/api/stations_api.dart';
-export 'src/api/route_lines_api.dart';
-export 'src/api/tib_client.dart';
+// TIB
+export 'src/tib/tib.dart';
+export 'src/tib/tib_client.dart';
 
 // Messaging
 export 'src/messaging/transit_rss.dart';
@@ -27,6 +25,3 @@ export 'src/models/realtime/bus_position.dart';
 export 'src/models/realtime/bus_stopped.dart';
 export 'src/models/realtime/station_info.dart';
 export 'src/models/realtime/connection_close.dart';
-
-// Sockets
-export 'src/sockets/location_socket.dart';

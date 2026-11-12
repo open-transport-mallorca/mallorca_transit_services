@@ -5,7 +5,7 @@ import 'package:html/dom.dart';
 import 'package:html/parser.dart' show parse;
 import 'package:dart_rss/dart_rss.dart';
 import 'package:http/http.dart';
-import 'package:mallorca_transit_services/src/api/tib_client.dart';
+import 'package:mallorca_transit_services/src/tib/tib_client.dart';
 import 'package:mallorca_transit_services/src/messaging/feed_date.dart'
     as feed_date;
 import 'package:mallorca_transit_services/src/models/transit_news.dart';
