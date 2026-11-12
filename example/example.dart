@@ -30,25 +30,18 @@ void main() async {
   final sublines = await tib.lines.sublines(route!);
   print(sublines);
 
-  // Get the service warnings
-  final warnings = await TransitRss.getWarnings(Language.en);
+  // Get the service warnings, with the ids of the lines they affect
+  final warnings = await tib.warnings.all(language: Language.en);
   final warning = warnings.first;
   print('${warning.title} (${warning.published})');
+  print(warning.affectedLineIds);
+  print(warning.paragraphs);
+  print(warning.documentUrl);
 
-  // Fetch the description and the affected lines of a warning, in one request.
-  await TransitWarningScraper.fetchDetails(warning);
-  print(warning.affectedLines);
-  print(warning.description);
-
-  // Only the URL is needed to scrape, so a cached warning can be refreshed
-  // without keeping the feed item around.
-  print(await TransitWarningScraper.affectedLines(warning.link));
-  print(await TransitWarningScraper.description(warning.link));
-
-  // Get the news
-  final news = await TransitRss.getNews(Language.en);
+  // Get the news, newest first
+  final news = await tib.news.all(language: Language.en);
   print(news.first.title);
-  print(await NewsScraper.description(news.first.link));
+  print(news.first.paragraphs);
 
   // Get the link to the PDF Timetable of line A42
   final timetablePdf = await tib.lines.pdfTimetable('A42');

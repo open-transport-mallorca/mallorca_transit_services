@@ -327,6 +327,132 @@ void main() {
     });
   });
 
+  group('TibWarnings', () {
+    Map notice(String id, String path) => {
+          'abs': '',
+          'afl': [3066],
+          'id': id,
+          'mdt': '2026-11-12',
+          'pdt': '2026-11-12',
+          'tit': 'Notice $id',
+          'txt': '<p>Text</p>',
+          'url': 'https://www.tib.org/$path',
+        };
+
+    Map webNotice(String path, String? document) => {
+          'url': path,
+          'attachedFileNotice': document == null
+              ? '{}'
+              : jsonEncode({
+                  'extension': 'pdf',
+                  'url': '$document?previewFileIndex=1',
+                }),
+        };
+
+    test('all joins the attached PDFs by page', () async {
+      final tib = mockTib((request) async {
+        if (request.url.host == 'api.tib.org') {
+          expect(request.url.path, '/sictmws/notices/ctmr4');
+          expect(request.url.queryParameters['lng'], 'en_GB');
+          return http.Response(
+              jsonEncode([notice('a', '/-/avis-a'), notice('b', '-/avis-b')]),
+              200);
+        }
+        expect(request.url.path, '/o/ce/notices');
+        expect(request.url.queryParameters,
+            {'groupId': '20124', 'entity': 'ctmr4', 'langId': 'en_GB'});
+        return http.Response(
+            jsonEncode([
+              webNotice('/-/avis-a', '/documents/d/ctm/avis-a'),
+              webNotice('/-/avis-b', null),
+            ]),
+            200);
+      });
+
+      final warnings = await tib.warnings.all(language: Language.en);
+
+      expect(warnings.map((w) => w.id), ['a', 'b']);
+      expect(warnings[0].documentUrl.toString(),
+          'https://www.tib.org/documents/d/ctm/avis-a');
+      expect(warnings[1].documentUrl, isNull);
+    });
+
+    test('all still returns the warnings when the PDFs fail', () async {
+      final tib = mockTib((request) async => request.url.host == 'api.tib.org'
+          ? http.Response(jsonEncode([notice('a', '-/avis-a')]), 200)
+          : http.Response('down', 503));
+
+      final warnings = await tib.warnings.all();
+
+      expect(warnings.single.documentUrl, isNull);
+    });
+
+    test('byId returns the warning with its PDF', () async {
+      final tib = mockTib((request) async {
+        if (request.url.host == 'api.tib.org') {
+          expect(request.url.path, '/sictmws/notices/id/a');
+          return http.Response(jsonEncode(notice('a', '-/avis-a')), 200);
+        }
+        return http.Response(
+            jsonEncode([webNotice('/-/avis-a', '/documents/d/ctm/avis-a')]),
+            200);
+      });
+
+      final warning = await tib.warnings.byId('a');
+
+      expect(warning!.documentUrl.toString(),
+          'https://www.tib.org/documents/d/ctm/avis-a');
+    });
+
+    test('byId returns null for an unknown id', () async {
+      final tib = mockTib((request) async => request.url.host == 'api.tib.org'
+          ? http.Response('', 404)
+          : http.Response('[]', 200));
+
+      expect(await tib.warnings.byId('nope'), isNull);
+    });
+  });
+
+  group('TibNews', () {
+    Map article(int id, String? date) => {
+          'abs': '',
+          'id': id,
+          'mdt': '2026-01-01',
+          'tit': 'News $id',
+          'txt': '<p>Text</p>',
+          'url': 'https://www.tib.org/-/news-$id',
+          if (date != null) 'dat': date,
+        };
+
+    test('all reads every page and sorts newest first', () async {
+      final pages = <String?>[];
+      final tib = mockTib((request) async {
+        final query = request.url.queryParameters;
+        pages.add(query['pag']);
+        expect(query['lng'], 'de_DE');
+        return query['pag'] == '1'
+            ? http.Response(
+                jsonEncode({
+                  'pag': {'cur': 1, 'nxt': 2},
+                  'newsInfos': [article(1, '2025-05-01'), article(2, null)]
+                }),
+                200)
+            : http.Response(
+                jsonEncode({
+                  'pag': {'cur': 2, 'nxt': -1},
+                  'newsInfos': [article(3, '2026-11-01')]
+                }),
+                200);
+      });
+
+      final news = await tib.news.all(language: Language.de);
+
+      expect(pages, ['1', '2']);
+      // Article 2 has no date, so its modification date counts.
+      expect(news.map((n) => n.id), [3, 2, 1]);
+    });
+  });
+
   group('TibRealtime', () {
     late StreamChannelController<dynamic> socket;
     late List<Uri> connected;

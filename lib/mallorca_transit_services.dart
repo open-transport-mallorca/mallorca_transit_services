@@ -10,15 +10,13 @@ library mallorca_transit_services;
 export 'src/tib/tib.dart';
 export 'src/tib/tib_client.dart';
 
-// Messaging
-export 'src/messaging/transit_rss.dart';
-
 // Models
 export 'src/tib/models/departure.dart';
 export 'src/tib/models/station.dart';
 export 'src/tib/models/route_line.dart';
-export 'src/models/transit_warning.dart';
-export 'src/models/transit_news.dart';
+export 'src/tib/models/language.dart';
+export 'src/tib/models/transit_warning.dart';
+export 'src/tib/models/transit_news.dart';
 
 // Realtime models
 export 'src/tib/models/realtime/bus_position.dart';

@@ -144,12 +144,4 @@ void main() {
           Uri.parse('https://api.tib.org/sictmws/stops/ctmr4'));
     });
   });
-
-  group('RSS scrapers', () {
-    test('use the shared TibClient by default', () {
-      expect(TransitRss.httpClient, same(TibClient.shared));
-      expect(TransitWarningScraper.httpClient, same(TibClient.shared));
-      expect(NewsScraper.httpClient, same(TibClient.shared));
-    });
-  });
 }

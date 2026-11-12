@@ -8,7 +8,6 @@ environment:
   sdk: ^3.0.0
 
 dependencies:
-  dart_rss: ^3.0.3
   html: ^0.15.4
   http: ^1.2.1
   latlong2: ^0.9.1

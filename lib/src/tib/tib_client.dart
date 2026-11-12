@@ -54,9 +54,6 @@ class TibException implements Exception {
 
 /// HTTP client that sends TIB's API key with every request.
 class TibClient extends BaseClient {
-  /// Only used by the RSS scrapers. Use a [Tib] instead.
-  static final TibClient shared = TibClient();
-
   final Client _inner;
   Future<TibConfig?>? _config;
 
