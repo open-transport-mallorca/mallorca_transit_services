@@ -354,6 +354,62 @@ void main() {
     });
   });
 
+  group('TibTowns', () {
+    test('all returns every town', () async {
+      final tib = mockTib((request) async {
+        expect(request.url.path, '/sictmws/towns/ctmr4');
+        return http.Response(
+            jsonEncode({
+              'town': [
+                {'id': 114, 'nam': 'Alaró'},
+                {'id': 98, 'nam': 'Alcúdia'}
+              ]
+            }),
+            200,
+            headers: {'content-type': 'application/json; charset=utf-8'});
+      });
+
+      final towns = await tib.towns.all();
+
+      expect(
+          towns.map((t) => (t.id, t.name)), [(114, 'Alaró'), (98, 'Alcúdia')]);
+    });
+
+    test('stations returns the town\'s TIB stations only', () async {
+      final tib = mockTib((request) async => switch (request.url.path) {
+            '/sictmws/towns/ctmr4/1' => http.Response(
+                jsonEncode({
+                  'id': 1,
+                  'nam': 'Palma',
+                  'stops': [
+                    {'cod': '2', 'nam': 'Station 2'},
+                    {'cod': 'E929', 'nam': 'Parc de la Mar'},
+                    {'cod': '1', 'nam': 'Station 1'},
+                  ]
+                }),
+                200),
+            _ => http.Response(
+                jsonEncode({
+                  'stopsInfo': [stationJson('1'), stationJson('2')]
+                }),
+                200),
+          });
+
+      final stations = await tib.towns.stations(1);
+
+      expect(stations.map((s) => s.code), ['2', '1']);
+    });
+
+    test('stations returns an empty list for an unknown town', () async {
+      final tib = mockTib((request) async =>
+          request.url.path.startsWith('/sictmws/towns')
+              ? http.Response('', 404)
+              : http.Response(jsonEncode({'stopsInfo': []}), 200));
+
+      expect(await tib.towns.stations(999999), isEmpty);
+    });
+  });
+
   group('TibDepartures', () {
     test('next returns the departures', () async {
       final tib = mockTib((request) async {
