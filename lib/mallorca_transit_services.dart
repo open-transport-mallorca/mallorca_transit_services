@@ -6,6 +6,10 @@
 ///
 library mallorca_transit_services;
 
+// Shared
+export 'src/shared/language.dart';
+export 'src/shared/way.dart';
+
 // TIB
 export 'src/tib/tib.dart';
 export 'src/tib/tib_client.dart';
@@ -18,7 +22,6 @@ export 'src/tib/models/route_line.dart';
 export 'src/tib/models/timetable.dart';
 export 'src/tib/models/town.dart';
 export 'src/tib/models/trip.dart';
-export 'src/tib/models/language.dart';
 export 'src/tib/models/transit_warning.dart';
 export 'src/tib/models/transit_news.dart';
 

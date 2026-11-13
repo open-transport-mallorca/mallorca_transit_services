@@ -1,9 +1,7 @@
 import 'package:latlong2/latlong.dart';
+import 'package:mallorca_transit_services/src/shared/way.dart';
 import 'package:mallorca_transit_services/src/tib/models/station.dart';
 import 'package:xml/xml.dart';
-
-/// Direction of a [Subline].
-enum Way { way, back, circular }
 
 enum LineType {
   train, // 1

@@ -1,3 +1,7 @@
+import 'package:mallorca_transit_services/src/emt/models/emt_line.dart';
+import 'package:mallorca_transit_services/src/emt/models/emt_way.dart';
+import 'package:mallorca_transit_services/src/shared/way.dart';
+
 /// An [EmtSubline]'s timetable for one [EmtDayType].
 class EmtTimetable {
   final int id;
@@ -34,8 +38,8 @@ class EmtTimetable {
 
   factory EmtTimetable.fromJson(Map json) {
     final comments = {
-      1: json['outgoingComment'],
-      2: json['returnComment'],
+      Way.way: json['outgoingComment'],
+      Way.back: json['returnComment'],
     };
     return EmtTimetable(
         id: json['id'],
@@ -49,13 +53,13 @@ class EmtTimetable {
         afternoonInterval: _minutes(json['afternoonInterval']),
         directions: [
           for (final Map direction in json['timeTables'])
-            EmtTimetableDirection._fromJson(
-                direction, comments[direction['direction']['code']])
+            EmtTimetableDirection._fromJson(direction,
+                comments[wayFromJson(direction['direction']['code'])])
         ]);
   }
 
   Map<String, dynamic> toJson() {
-    String? comment(int direction) =>
+    String? comment(Way direction) =>
         directions.where((d) => d.direction == direction).firstOrNull?.comment;
     return {
       'id': id,
@@ -65,8 +69,8 @@ class EmtTimetable {
       'endValidityDate': endDate != null ? _date(endDate!) : null,
       'morningInterval': morningInterval?.inMinutes.toString(),
       'afternoonInterval': afternoonInterval?.inMinutes.toString(),
-      'outgoingComment': comment(1),
-      'returnComment': comment(2),
+      'outgoingComment': comment(Way.way),
+      'returnComment': comment(Way.back),
       'timeTables': directions.map((d) => d.toJson()).toList(),
     };
   }
@@ -146,8 +150,8 @@ class EmtTimetableDirection {
   /// See [EmtRoute.id].
   final int routeId;
 
-  /// 1 outbound, 2 return.
-  final int direction;
+  /// [Way.way] or [Way.back].
+  final Way direction;
 
   /// Only in Catalan and Spanish.
   final String? comment;
@@ -169,7 +173,7 @@ class EmtTimetableDirection {
   factory EmtTimetableDirection._fromJson(Map json, String? comment) {
     return EmtTimetableDirection(
         routeId: json['routeCode'],
-        direction: json['direction']['code'],
+        direction: wayFromJson(json['direction']['code']),
         comment: comment == null || comment.isEmpty ? null : comment,
         runs: [
           for (final Map runs in json['trips']) EmtTimetableRuns._fromJson(runs)
@@ -179,7 +183,7 @@ class EmtTimetableDirection {
   Map<String, dynamic> toJson() {
     return {
       'routeCode': routeId,
-      'direction': {'code': direction},
+      'direction': {'code': wayToJson(direction)},
       'trips': runs.map((r) => r.toJson()).toList(),
     };
   }

@@ -1,5 +1,5 @@
 import 'package:mallorca_transit_services/src/emt/emt_client.dart';
-import 'package:mallorca_transit_services/src/tib/models/html_text.dart';
+import 'package:mallorca_transit_services/src/shared/html_text.dart';
 
 class EmtArticle {
   final int id;

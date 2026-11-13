@@ -37,7 +37,11 @@ Map lineJson(int id, String code, {String color = 'DEB926'}) => {
 
 final line4 = EmtLine(id: 4, code: '4', name: 'Line 4', color: 0xFF993636);
 final route958 = EmtRoute(
-    id: 958, lineId: 4, sublineId: 851, direction: 1, headsign: 'Illetes');
+    id: 958,
+    lineId: 4,
+    sublineId: 851,
+    direction: Way.way,
+    headsign: 'Illetes');
 
 void main() {
   group('EmtClient', () {
@@ -237,7 +241,7 @@ void main() {
                 id: 961,
                 lineId: 4,
                 sublineId: 851,
-                direction: 2,
+                direction: Way.back,
                 headsign: 'Nou Llevant')
             .toString(),
       ]);
@@ -467,9 +471,9 @@ void main() {
 
       final [outbound, back] = timetable.directions;
       expect(outbound.routeId, 1559);
-      expect(outbound.direction, 1);
+      expect(outbound.direction, Way.way);
       expect(outbound.comment, 'Referència de pas per pl. Espanya.');
-      expect(back.direction, 2);
+      expect(back.direction, Way.back);
       expect(back.comment, isNull);
       expect(back.runs.map((r) => r.fromStopId), [93, 50]);
       expect(outbound.runs.single.toStopId, 93);

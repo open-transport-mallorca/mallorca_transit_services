@@ -1,3 +1,6 @@
+import 'package:mallorca_transit_services/src/emt/models/emt_way.dart';
+import 'package:mallorca_transit_services/src/shared/way.dart';
+
 class EmtLine {
   final int id;
 
@@ -93,8 +96,8 @@ class EmtRoute {
   final int lineId;
   final int sublineId;
 
-  /// 1 outbound, 2 return.
-  final int direction;
+  /// [Way.way] or [Way.back].
+  final Way direction;
 
   /// Where it's heading, as shown on the bus.
   final String headsign;
@@ -118,7 +121,7 @@ class EmtRoute {
         id: json['tripId'],
         lineId: lineId ?? json['lineId'],
         sublineId: sublineId ?? json['subLineId'],
-        direction: json['directionId'],
+        direction: wayFromJson(json['directionId']),
         headsign: json['headSign']);
   }
 
@@ -127,7 +130,7 @@ class EmtRoute {
       'tripId': id,
       'lineId': lineId,
       'subLineId': sublineId,
-      'directionId': direction,
+      'directionId': wayToJson(direction),
       'headSign': headsign,
     };
   }

@@ -9,7 +9,7 @@ import 'package:mallorca_transit_services/src/emt/models/emt_line.dart';
 import 'package:mallorca_transit_services/src/emt/models/emt_article.dart';
 import 'package:mallorca_transit_services/src/emt/models/emt_stop.dart';
 import 'package:mallorca_transit_services/src/emt/models/emt_timetable.dart';
-import 'package:mallorca_transit_services/src/tib/models/language.dart';
+import 'package:mallorca_transit_services/src/shared/language.dart';
 
 part 'emt_alerts.dart';
 part 'emt_departures.dart';
