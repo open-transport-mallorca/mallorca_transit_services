@@ -1,5 +1,54 @@
 # CHANGELOG
 
+## 3.0.0
+
+A rewrite. TIB now comes from its JSON APIs instead of RSS feeds and scraped pages, behind one `Tib` entry point, and EMT Palma, Palma's city buses, is new behind `Emt`. Every public API changed; see the README for the new usage.
+
+### TIB
+
+- Added `Tib`, which replaces the static API classes with sub-APIs: `stations`, `lines`, `departures`, `timetables`, `trips`, `towns`, `warnings`, `news` and `realtime`
+  - `StationsApi.getAllStations` → `stations.all`, `StationsApi.fromId` → `stations.byId`, `StationsApi.getLines` → `stations.lines`
+  - `RouteLinesApi.getAllLines` → `lines.all`, `getLine` → `lines.byCode`, `getSublines` → `lines.sublines`, `getPath` → `lines.path`
+  - `RouteLinesApi.getPdfTimetable` → `timetables.current`, which returns a `Timetable` with its `url`
+  - `DeparturesApi.getDepartures` → `departures.next`
+  - `TransitRss.getWarnings` → `warnings.all`, `TransitRss.getNews` → `news.all`
+  - `LocationWebSocket.locationStream` → `realtime.track`
+- Added `stations.byCode`, `stations.near`, `stations.inArea` and `stations.photo`
+- Added `departures.at`, departures from the timetable at any time, and `departures.withBays`, a bus or train station's board with its bays (`BayDeparture`)
+- Added `timetables`, with every PDF timetable of a line (`Timetable`), including seasonal ones
+- Added `trips`, the runs of a day with their stop times (`Trip`, `TripStop`)
+- Added `towns` (`Town`) and the stations in each
+- Added `warnings.byId`
+- Lookups like `byCode` and `byId` return `null` when nothing is found, and failed requests throw `TibException`
+- `Departure`:
+  - Renamed `estimatedArrival` to `scheduledArrival`, `departureTime` to `tripDepartureTime`, `endTime` to `tripArrivalTime`, `originStop` to `origin` and `delayed` to `onDemand`, which is what TIB's `dem` means
+  - Added `lineId` and `lineColorValue`
+  - Removed `departureStop` and `RealTripBusStats`
+- `Station.pickupType` and `dropoffType` are now a `PickupDropoffType`
+- Added `RouteLine.endDate`
+- `TransitWarning` and `TransitNews` come from TIB's JSON instead of RSS, so they're complete without scraping:
+  - `TransitWarning` has `title`, `summary`, `html`, `paragraphs`, `affectedLineIds` (compare to `RouteLine.id`), `modified`, and `link` and `documentUrl` as `Uri`
+  - `TransitNews` has an `int` `id`, `html`, `summaryParagraphs`, `modified`, `featured`, `thumbnailUrl`, and `link` as a `Uri`
+- Renamed `Passangers` to `Passengers`, `RouteStationInfo.passangers` to `passengers` (now nullable) and `BusStopped.passangers` to `passengers`
+- Removed `TransitRss`, `TransitWarningScraper`, `NewsScraper` and the `dart_rss` dependency
+
+### EMT Palma
+
+- Added `Emt` with sub-APIs:
+  - `stops`: all, by id, and the lines serving a stop (`EmtStop`)
+  - `lines`: all, by id, sublines, routes (one per direction), and a route's stops and path (`EmtLine`, `EmtSubline`, `EmtRoute`)
+  - `departures.next`: live arrivals at a stop, with bus numbers (`EmtDeparture`)
+  - `timetables.forSubline`: one per day type (`EmtTimetable`)
+  - `alerts`: all, by id, and their attachments (`EmtAlert`)
+  - `news`: all articles, newest first (`EmtArticle`)
+- Added `EmtClient`, which gets EMT's token by creating an anonymous user. Store the token from `onToken` and pass it back as `token`, or every start creates a new user
+- Added `EmtException`, with EMT's error code and message
+
+### Shared
+
+- `Language` and `Way` are shared by TIB and EMT. Added `Way.circular`
+- Models have an instance `toJson()` instead of a static `toJson(model)`, and `fromJson(toJson())` gives the same object back. JSON cached by 2.x may not read back, so drop those caches
+
 ## 2.8.0
 
 TIB moved its stops and lines service behind an API key, and the old `ws.tib.org` host no longer responds, so every `StationsApi` and `RouteLinesApi` call failed. This release fixes them without changes to calling code.
