@@ -18,8 +18,14 @@ dependencies:
 
 ## Usage
 
-Everything goes through a `Tib` instance. Create one and reuse it, as it
-fetches TIB's API key once and caches it:
+There are two entry points:
+
+- `Tib` for TIB, the interurban buses, trains and metro.
+- `Emt` for EMT Palma, the city buses.
+
+## TIB
+
+Create one `Tib` and reuse it, as it fetches TIB's API key once and caches it:
 
 ```dart
 final tib = Tib();
@@ -126,18 +132,92 @@ final subscription = tib.realtime.track(departure.realTrip!.id).listen((event) {
 await subscription.cancel();
 ```
 
-### Errors
+## EMT Palma
 
-Requests that fail throw a `TibException` with the status code and URL.
-Lookups like `byCode` and `byId` return `null` instead when nothing is found.
+EMT needs a token, which the package gets by creating an anonymous user. Store
+it and pass it back, so a new user isn't created on every start:
 
-### HTTP client
+```dart
+final emt = Emt(
+    client: EmtClient(
+        token: storedToken, // null on the first run
+        onToken: (token) => saveToken(token)));
+```
+
+### Stops
+
+A stop's id is also the code shown at the stop:
+
+```dart
+await emt.stops.all();
+await emt.stops.byId(1);
+await emt.stops.lines(1); // the lines serving it
+```
+
+### Departures
+
+The buses coming to a stop, soonest first, with their bus numbers:
+
+```dart
+final departures = await emt.departures.next(1);
+print(departures.first.arrival);
+```
+
+### Lines
+
+A line has sublines, its variants, and each subline has a route per direction:
+
+```dart
+final lines = await emt.lines.all();
+final line = (await emt.lines.byId(4))!;
+final sublines = await emt.lines.sublines(line);
+final routes = await emt.lines.routes(sublines.first);
+await emt.lines.stops(routes.first); // in driving order
+await emt.lines.path(routes.first);
+```
+
+### Timetables
+
+One per day type, e.g. weekdays or Sundays and holidays. Departures are counted
+from the start of the service day, so buses after midnight are past 24 hours:
+
+```dart
+final timetables = await emt.timetables.forSubline(sublines.first);
+print(timetables.first.days.name);
+print(timetables.first.directions.first.runs.first.departures);
+```
+
+### Alerts and news
+
+Alert titles come in Catalan, Spanish, English or German, but descriptions only
+in Catalan and Spanish. English and German news is sparse and often in Spanish:
+
+```dart
+final alerts = await emt.alerts.all(language: Language.ca);
+print(alerts.first.lineIds); // compare to EmtLine.id
+final pdf = await emt.alerts
+    .attachment(alerts.first, alerts.first.attachmentIds.first);
+
+final news = await emt.news.all(language: Language.ca); // newest first
+print(news.first.imageUrl);
+```
+
+## Errors
+
+Requests that fail throw a `TibException` or an `EmtException` with the status
+code and URL. Lookups like `byCode` and `byId` return `null` instead when
+nothing is found.
+
+## HTTP client
 
 To route requests through your own client, wrap it:
 
 ```dart
 final tib = Tib(client: TibClient(inner: myClient));
+final emt = Emt(client: EmtClient(inner: myClient, token: storedToken));
 ```
+
+## Caching
 
 Models have `toJson`, and `fromJson(toJson())` gives the same object back, so
 they can be cached.

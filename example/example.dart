@@ -47,6 +47,26 @@ void main() async {
   final timetable = await tib.timetables.current(3066);
   print(timetable?.url);
 
+  // EMT Palma, the city buses. Store the token so a new anonymous user isn't
+  // created on every start.
+  final emt =
+      Emt(client: EmtClient(onToken: (token) => print('Token: $token')));
+
+  // The buses coming to stop 1
+  final emtDepartures = await emt.departures.next(1);
+  print(emtDepartures);
+
+  // The stops of line 4, in driving order
+  final emtLine = await emt.lines.byId(4);
+  final emtSublines = await emt.lines.sublines(emtLine!);
+  final emtRoutes = await emt.lines.routes(emtSublines.first);
+  print(await emt.lines.stops(emtRoutes.first));
+
+  // EMT's service alerts
+  final alerts = await emt.alerts.all(language: Language.ca);
+  print(alerts.map((alert) => alert.title));
+  emt.close();
+
   // Listen to real-time bus updates
   // For example, take the first departure that has tracking info
   final realTripId = departures
