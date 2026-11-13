@@ -1,38 +1,44 @@
-import 'package:mallorca_transit_services/src/models/realtime/timestamps.dart';
+import 'package:mallorca_transit_services/src/tib/models/realtime/timestamps.dart';
 
-/// Event received from the location WebSocket when a bus stops at a station.
+/// Sent when a tracked bus stops at a station.
 class BusStopped {
-  /// When the server published the event, roughly a second after [recordedAt].
+  /// When the server sent the event.
   DateTime timestamp;
 
   double lat;
   double long;
   double speed;
+
+  /// Minutes behind schedule.
   int? delay;
 
-  /// Passengers on board. Always `0` since October 2026, when TIB stopped
-  /// sending real counts, so it no longer means the bus is empty.
-  int passangers;
+  /// Passengers on board. `0` since October 2026, as TIB stopped counting.
+  int passengers;
+
   String stopName;
 
-  /// Internal id of the stop, matching [Station.id].
+  /// See [Station.id].
   int? stopId;
 
-  /// Public code of the stop, matching [Station.code].
+  /// See [Station.code].
   String? stopCode;
 
-  /// Id of the trip this event belongs to, matching the id passed to
-  /// [LocationWebSocket.locationChannel].
+  /// Id of the tracked trip, see [RealTrip.id].
   int? tripId;
 
   /// When the vehicle recorded the event.
   DateTime? recordedAt;
 
-  /// Scheduled arrival. Time only, so the date part is the Unix epoch.
+  /// Scheduled arrival. Time only; the date is fake.
   DateTime scheduledTime;
 
+  /// When the bus arrived.
   DateTime? actualTime;
+
+  /// When the bus stopped.
   DateTime? stopTime;
+
+  /// When the bus left.
   DateTime? leaveTime;
 
   BusStopped(
@@ -41,7 +47,7 @@ class BusStopped {
       required this.long,
       required this.speed,
       this.delay,
-      required this.passangers,
+      required this.passengers,
       required this.stopName,
       required this.scheduledTime,
       this.actualTime,
@@ -54,7 +60,7 @@ class BusStopped {
 
   @override
   String toString() {
-    return 'BusStopped{timestamp: $timestamp, lat: $lat, long: $long, speed: $speed, delay: $delay, passangers: $passangers, stopName: $stopName, stopId: $stopId, stopCode: $stopCode, tripId: $tripId, recordedAt: $recordedAt, scheduledTime: $scheduledTime, actualTime: $actualTime, stopTime: $stopTime, leaveTime: $leaveTime}';
+    return 'BusStopped{timestamp: $timestamp, lat: $lat, long: $long, speed: $speed, delay: $delay, passengers: $passengers, stopName: $stopName, stopId: $stopId, stopCode: $stopCode, tripId: $tripId, recordedAt: $recordedAt, scheduledTime: $scheduledTime, actualTime: $actualTime, stopTime: $stopTime, leaveTime: $leaveTime}';
   }
 
   factory BusStopped.fromJson(Map json) {
@@ -64,7 +70,7 @@ class BusStopped {
         long: (json['lng'] as num).toDouble(),
         speed: (json['vel'] as num).toDouble(),
         delay: json['del'] as int?,
-        passangers: json['pass'] as int,
+        passengers: json['pass'] as int,
         stopName: json['stop_nam'] as String,
         stopId: json['stop_id'] as int?,
         stopCode: json['stop_code'] as String?,

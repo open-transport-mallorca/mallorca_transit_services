@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
 import 'package:test/test.dart';
 import 'package:mallorca_transit_services/mallorca_transit_services.dart';
 
@@ -246,7 +243,7 @@ void main() {
         ]
       });
 
-      final roundTripped = RouteLine.fromJson(RouteLine.toJson(original));
+      final roundTripped = RouteLine.fromJson(original.toJson());
 
       expect(roundTripped.active, original.active);
       expect(roundTripped.code, original.code);
@@ -306,128 +303,56 @@ void main() {
       expect(routeLine.sublines, isNull);
     });
 
-    test('getAllLines fetches all route lines', () async {
-      final mockClient = MockClient((request) async {
-        final responsePayload = json.encode({
-          "linesInfo": [
-            {
-              "act": true,
-              "cod": "B42",
-              "id": 1,
-              "nam": "Bus 42",
-              "color": "#FF0000",
-              "typ": 3,
-              "sublines": []
-            }
-          ]
-        });
-        return http.Response(responsePayload, 200);
-      });
+    test('fromJson parses every line type', () {
+      LineType typeOf(int typ) => RouteLine.fromJson({
+            'act': true,
+            'cod': 'X',
+            'id': 1,
+            'nam': 'X',
+            'color': '#000000',
+            'typ': typ
+          }).type;
 
-      RouteLinesApi.httpClient = mockClient;
-
-      final lines = await RouteLinesApi.getAllLines();
-
-      expect(lines, isNotEmpty);
-      expect(lines[0].code, 'B42');
+      expect([
+        for (var typ = 1; typ <= 6; typ++) typeOf(typ)
+      ], [
+        LineType.train,
+        LineType.metro,
+        LineType.bus,
+        LineType.urban,
+        LineType.shuttle,
+        LineType.unknown
+      ]);
     });
 
-    test('getAllLines with activeOnly filters inactive lines', () async {
-      final mockClient = MockClient((request) async {
-        final responsePayload = json.encode({
-          "linesInfo": [
-            {
-              "act": true,
-              "cod": "B42",
-              "id": 1,
-              "nam": "Bus 42",
-              "color": "#FF0000",
-              "typ": 3,
-              "sublines": []
-            },
-            {
-              "act": false,
-              "cod": "B99",
-              "id": 2,
-              "nam": "Bus 99",
-              "color": "#00FF00",
-              "typ": 3,
-              "sublines": []
-            }
-          ]
-        });
-        return http.Response(responsePayload, 200);
+    test('fromJson parses endDate and a circular subline', () {
+      final line = RouteLine.fromJson({
+        'act': true,
+        'cod': 'X',
+        'id': 1,
+        'nam': 'X',
+        'color': '#000000',
+        'typ': 4,
+        'end': '2026-12-31T00:00:00',
+        'sublines': [
+          {
+            'vis': true,
+            'cod': 'X-1',
+            'id': 2,
+            'nam': 'X',
+            'dir': 'Circular',
+            'stops': []
+          }
+        ]
       });
 
-      RouteLinesApi.httpClient = mockClient;
+      expect(line.endDate, DateTime(2026, 12, 31));
+      expect(line.sublines!.single.way, Way.circular);
 
-      final lines = await RouteLinesApi.getAllLines(activeOnly: true);
-
-      expect(lines.length, 1);
-      expect(lines[0].code, 'B42');
-    });
-
-    test('getLine fetches a specific route line', () async {
-      final mockClient = MockClient((request) async {
-        final responsePayload = json.encode({
-          "act": true,
-          "cod": "B42",
-          "id": 1,
-          "nam": "Bus 42",
-          "color": "#FF0000",
-          "typ": 3,
-          "sublines": []
-        });
-        return http.Response(responsePayload, 200);
-      });
-
-      RouteLinesApi.httpClient = mockClient;
-
-      final line = await RouteLinesApi.getLine('B42');
-
-      expect(line.code, 'B42');
-    });
-
-    test('getPdfTimetable fetches the most recent PDF timetable URL', () async {
-      final mockClient = MockClient((request) async {
-        if (request.url.host == 'api.tib.org') {
-          return http.Response('{"id": 3066}', 200);
-        }
-
-        if (request.url.host == 'www.tib.org') {
-          final schedules = jsonEncode([
-            {
-              "JSONObject": {
-                "FechaDeInicioDeValidez": "2025-04-01",
-                "urlScheduleFile": "/documents/20124/old.pdf",
-              }
-            },
-            {
-              "JSONObject": {
-                "FechaDeInicioDeValidez": "2026-03-27",
-                "urlScheduleFile": "/documents/20124/latest.pdf",
-              }
-            },
-            {
-              "JSONObject": {
-                "FechaDeInicioDeValidez": "2025-11-01",
-                "urlScheduleFile": "/documents/20124/middle.pdf",
-              }
-            },
-          ]);
-          return http.Response(schedules, 200);
-        }
-
-        return http.Response('Not found', 404);
-      });
-
-      RouteLinesApi.httpClient = mockClient;
-
-      final pdfUri = await RouteLinesApi.getPdfTimetable('B42');
-
-      expect(pdfUri, isNotNull);
-      expect(
-          pdfUri.toString(), 'https://www.tib.org/documents/20124/latest.pdf');
+      final roundTripped = RouteLine.fromJson(line.toJson());
+      expect(roundTripped.type, LineType.urban);
+      expect(roundTripped.endDate, line.endDate);
+      expect(roundTripped.sublines!.single.way, Way.circular);
     });
   });
 }

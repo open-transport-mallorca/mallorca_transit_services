@@ -1,55 +1,68 @@
 import 'package:latlong2/latlong.dart';
-import 'package:mallorca_transit_services/src/models/station.dart';
+import 'package:mallorca_transit_services/src/tib/models/station.dart';
 import 'package:xml/xml.dart';
 
-enum Way { way, back }
+/// Direction of a [Subline].
+enum Way { way, back, circular }
 
 enum LineType {
   train, // 1
   metro, // 2
   bus, // 3
+  urban, // 4
+  shuttle, // 5, Lançadora
   unknown
 }
 
-enum PickupDropoffType {
-  regular, // 0
-  notAvailable, // 1
-  phoneAgency, // 2
-  coordinateWithDriver, // 3
-}
-
-/// A transit line.
-///
-/// Some fields are only populated by [RouteLinesApi.getLine] and are `null` on
-/// lines from [RouteLinesApi.getAllLines]. Each one is marked below.
+/// A line, e.g. `A42`.
 class RouteLine {
+  /// Whether the line runs this season.
   bool active;
+
   String code;
+
+  /// Internal id.
   int id;
+
   String name;
+
+  /// ARGB colour.
   int color;
+
   LineType type;
 
-  /// Only set by [RouteLinesApi.getLine].
+  /// Only set by [TibLines.byCode].
   List<Subline>? sublines;
+
+  /// Whether the line only runs in summer.
   bool? summerOnly;
+
+  /// The line's seasons.
   List<RouteSession>? sessions;
+
+  /// Towns the line serves.
   List<RouteTown>? towns;
 
-  /// Only set by [RouteLinesApi.getLine].
+  /// Holidays, on which the holiday timetable applies. Only set by
+  /// [TibLines.byCode].
   List<RouteHoliday>? holidays;
+
   List<int>? zoneIds;
+
+  /// Whether the line only runs on request.
   bool? onDemand;
 
-  /// The line's sector, e.g. `"100"`, `"400"`, `"Metro"` or `"Tren"`. Not
-  /// numeric, hence a [String]. `null` for the airport lines.
+  /// The line's sector, e.g. `100`, `Metro` or `Tren`. `null` for the airport
+  /// lines.
   String? sector;
 
-  /// Date the line's current definition took effect.
-  /// Only set by [RouteLinesApi.getLine].
+  /// Start of the line's validity. Only set by [TibLines.byCode].
   DateTime? startDate;
 
-  /// The line's internal entity id.
+  /// End of the line's validity.
+  DateTime? endDate;
+
+  /// Internal id of the line's entity.
   int? entityId;
 
   RouteLine(
@@ -68,11 +81,12 @@ class RouteLine {
       this.onDemand,
       this.sector,
       this.startDate,
+      this.endDate,
       this.entityId});
 
   @override
   String toString() {
-    return 'Line{active: $active, code: $code, color: $color, id: $id, name: $name, type: $type, sublines: $sublines, summerOnly: $summerOnly, sessions: $sessions, towns: $towns, holidays: $holidays, zoneIds: $zoneIds, onDemand: $onDemand, sector: $sector, startDate: $startDate, entityId: $entityId}';
+    return 'Line{active: $active, code: $code, color: $color, id: $id, name: $name, type: $type, sublines: $sublines, summerOnly: $summerOnly, sessions: $sessions, towns: $towns, holidays: $holidays, zoneIds: $zoneIds, onDemand: $onDemand, sector: $sector, startDate: $startDate, endDate: $endDate, entityId: $entityId}';
   }
 
   factory RouteLine.fromJson(Map json) {
@@ -86,11 +100,14 @@ class RouteLine {
         1 => LineType.train,
         2 => LineType.metro,
         3 => LineType.bus,
+        4 => LineType.urban,
+        5 => LineType.shuttle,
         _ => LineType.unknown,
       },
       summerOnly: json['summ'],
       sector: json['sec'],
       startDate: json['ini'] != null ? DateTime.tryParse(json['ini']) : null,
+      endDate: json['end'] != null ? DateTime.tryParse(json['end']) : null,
       entityId: json['entityId'],
     );
 
@@ -112,51 +129,71 @@ class RouteLine {
     return routeLine;
   }
 
-  static Map toJson(RouteLine line) {
+  Map<String, dynamic> toJson() {
     return {
-      'act': line.active,
-      'cod': line.code,
-      'id': line.id,
-      'nam': line.name,
-      'color': line.color.toString(),
-      'typ': switch (line.type) {
+      'act': active,
+      'cod': code,
+      'id': id,
+      'nam': name,
+      'color': color.toString(),
+      'typ': switch (type) {
         LineType.train => 1,
         LineType.metro => 2,
         LineType.bus => 3,
-        _ => -1,
+        LineType.urban => 4,
+        LineType.shuttle => 5,
+        LineType.unknown => -1,
       },
-      'sublines': line.sublines?.map(Subline.toJson).toList(),
-      'summ': line.summerOnly,
-      'sessions': line.sessions?.map(RouteSession.toJson).toList(),
-      'towns': line.towns?.map(RouteTown.toJson).toList(),
-      'festius': line.holidays?.map(RouteHoliday.toJson).toList(),
-      'zoneTransport': line.zoneIds?.map((id) => {'id': id}).toList(),
-      'dem': line.onDemand,
-      'sec': line.sector,
-      'ini': line.startDate?.toIso8601String(),
-      'entityId': line.entityId
+      'sublines': sublines?.map((s) => s.toJson()).toList(),
+      'summ': summerOnly,
+      'sessions': sessions?.map((s) => s.toJson()).toList(),
+      'towns': towns?.map((t) => t.toJson()).toList(),
+      'festius': holidays?.map((h) => h.toJson()).toList(),
+      'zoneTransport': zoneIds?.map((id) => {'id': id}).toList(),
+      'dem': onDemand,
+      'sec': sector,
+      'ini': startDate?.toIso8601String(),
+      'end': endDate?.toIso8601String(),
+      'entityId': entityId
     };
   }
 }
 
+/// One route of a [RouteLine], e.g. its outbound or return direction.
 class Subline {
   RouteLine parentLine;
+
+  /// Whether TIB shows the subline.
   bool active;
+
   String code;
+
+  /// Internal id.
   int id;
+
   String name;
+
+  /// ARGB colour, the same as [parentLine]'s.
   int color;
+
   LineType type;
   Way way;
+
+  /// Stops in driving order.
   List<Station> stations;
+
+  /// Towns the subline serves.
   List<RouteTown>? towns;
+
+  /// Whether this is the line's main subline.
   bool? main;
+
+  /// Length in metres.
   double? distance;
 
-  /// Free-text description. Empty in every captured payload.
   String? description;
 
-  /// Numeric id of the parent line, matching [RouteLine.id].
+  /// Id of [parentLine], see [RouteLine.id].
   int? lineId;
 
   Subline(
@@ -192,27 +229,34 @@ class Subline {
                 .map((town) => RouteTown.fromJson(town))
                 .toList()
             : null,
-        way: json['dir'] == "Anada" ? Way.way : Way.back,
+        way: switch (json['dir']) {
+          'Anada' => Way.way,
+          'Circular' => Way.circular,
+          _ => Way.back,
+        },
         main: json['main'],
         distance: (json['distance'] as num?)?.toDouble(),
         description: json['desc'],
         lineId: json['lineid']);
   }
 
-  static Map toJson(Subline subline) {
+  Map<String, dynamic> toJson() {
     return {
-      'vis': subline.active,
-      'cod': subline.code,
-      'id': subline.id,
-      'nam': subline.name,
-      'stops':
-          subline.stations.map((station) => Station.toJson(station)).toList(),
-      'dir': subline.way == Way.way ? "Anada" : "Tornada",
-      'main': subline.main,
-      'towns': subline.towns?.map((town) => RouteTown.toJson(town)).toList(),
-      'distance': subline.distance,
-      'desc': subline.description,
-      'lineid': subline.lineId
+      'vis': active,
+      'cod': code,
+      'id': id,
+      'nam': name,
+      'stops': stations.map((station) => station.toJson()).toList(),
+      'dir': switch (way) {
+        Way.way => 'Anada',
+        Way.back => 'Tornada',
+        Way.circular => 'Circular',
+      },
+      'main': main,
+      'towns': towns?.map((town) => town.toJson()).toList(),
+      'distance': distance,
+      'desc': description,
+      'lineid': lineId
     };
   }
 
@@ -222,11 +266,20 @@ class Subline {
   }
 }
 
+/// A season of a [RouteLine], e.g. summer.
 class RouteSession {
+  /// Code of the bus type used.
   String? busTypeId;
+
+  /// Whether this is the current season.
   bool current;
+
+  /// Only the day and month count; the year is fake.
   DateTime startDate;
+
+  /// Only the day and month count; the year is fake.
   DateTime endDate;
+
   String name;
 
   RouteSession(
@@ -250,20 +303,24 @@ class RouteSession {
         name: json['nam']);
   }
 
-  static Map toJson(RouteSession session) {
+  Map<String, dynamic> toJson() {
     return {
-      'busTypeId': session.busTypeId,
-      'cur': session.current,
-      'ini': session.startDate.toIso8601String(),
-      'end': session.endDate.toIso8601String(),
-      'nam': session.name
+      'busTypeId': busTypeId,
+      'cur': current,
+      'ini': startDate.toIso8601String(),
+      'end': endDate.toIso8601String(),
+      'nam': name
     };
   }
 }
 
+/// A town on a [RouteLine] or [Subline].
 class RouteTown {
   int id;
+
+  /// Distance along the route.
   double distance;
+
   String name;
 
   RouteTown({required this.id, required this.distance, required this.name});
@@ -280,14 +337,12 @@ class RouteTown {
         name: json['nam']);
   }
 
-  static Map toJson(RouteTown town) {
-    return {'id': town.id, 'dis': town.distance, 'nam': town.name};
+  Map<String, dynamic> toJson() {
+    return {'id': id, 'dis': distance, 'nam': name};
   }
 }
 
-/// Holidays that may affect the schedule of a route line.
-///
-/// Only returned by [RouteLinesApi.getLine], not by [RouteLinesApi.getAllLines].
+/// A holiday, on which a [RouteLine] runs its holiday timetable.
 class RouteHoliday {
   DateTime date;
   String name;
@@ -303,14 +358,16 @@ class RouteHoliday {
     return RouteHoliday(date: DateTime.parse(json['dat']), name: json['nam']);
   }
 
-  static Map toJson(RouteHoliday holiday) {
-    return {'dat': holiday.date.toIso8601String(), 'nam': holiday.name};
+  Map<String, dynamic> toJson() {
+    return {'dat': date.toIso8601String(), 'nam': name};
   }
 }
 
-/// A route path with a list of coordinate segments for a given [Subline].
+/// The road a [Subline] drives on.
 class RoutePath {
   Subline subline;
+
+  /// Segments of the road, each a list of points.
   List<List<LatLng>> paths;
 
   RoutePath({required this.subline, required this.paths});

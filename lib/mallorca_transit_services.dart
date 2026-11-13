@@ -6,27 +6,24 @@
 ///
 library mallorca_transit_services;
 
-// APIs
-export 'src/api/departures_api.dart';
-export 'src/api/stations_api.dart';
-export 'src/api/route_lines_api.dart';
-export 'src/api/tib_client.dart';
-
-// Messaging
-export 'src/messaging/transit_rss.dart';
+// TIB
+export 'src/tib/tib.dart';
+export 'src/tib/tib_client.dart';
 
 // Models
-export 'src/models/departure.dart';
-export 'src/models/station.dart';
-export 'src/models/route_line.dart';
-export 'src/models/transit_warning.dart';
-export 'src/models/transit_news.dart';
+export 'src/tib/models/departure.dart';
+export 'src/tib/models/bay_departure.dart';
+export 'src/tib/models/station.dart';
+export 'src/tib/models/route_line.dart';
+export 'src/tib/models/timetable.dart';
+export 'src/tib/models/town.dart';
+export 'src/tib/models/trip.dart';
+export 'src/tib/models/language.dart';
+export 'src/tib/models/transit_warning.dart';
+export 'src/tib/models/transit_news.dart';
 
 // Realtime models
-export 'src/models/realtime/bus_position.dart';
-export 'src/models/realtime/bus_stopped.dart';
-export 'src/models/realtime/station_info.dart';
-export 'src/models/realtime/connection_close.dart';
-
-// Sockets
-export 'src/sockets/location_socket.dart';
+export 'src/tib/models/realtime/bus_position.dart';
+export 'src/tib/models/realtime/bus_stopped.dart';
+export 'src/tib/models/realtime/station_info.dart';
+export 'src/tib/models/realtime/connection_close.dart';

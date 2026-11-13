@@ -121,16 +121,27 @@ void main() {
       expect(response.statusCode, 401);
       expect(requests, 1);
     });
-  });
 
-  group('API classes', () {
-    test('use the shared TibClient by default', () {
-      expect(StationsApi.httpClient, same(TibClient.shared));
-      expect(RouteLinesApi.httpClient, same(TibClient.shared));
-      expect(DeparturesApi.httpClient, same(TibClient.shared));
-      expect(TransitRss.httpClient, same(TibClient.shared));
-      expect(TransitWarningScraper.httpClient, same(TibClient.shared));
-      expect(NewsScraper.httpClient, same(TibClient.shared));
+    test('builds SICTMWS URLs from the config', () async {
+      final client = TibClient(
+          config: TibConfig(
+              apiKeyName: 'x-api-key',
+              apiKey: 'k',
+              sictmwsUrl: Uri.parse('https://example.org/sictmws/')),
+          inner: MockClient((_) async => http.Response('', 200)));
+
+      expect(
+          await client.sictmws('lines/ctmr4/A42', {'dat': '2026-11-12'}),
+          Uri.parse(
+              'https://example.org/sictmws/lines/ctmr4/A42?dat=2026-11-12'));
+    });
+
+    test('falls back to the default SICTMWS URL without a config', () async {
+      final client =
+          TibClient(inner: MockClient((_) async => http.Response('down', 503)));
+
+      expect(await client.sictmws('stops/ctmr4'),
+          Uri.parse('https://api.tib.org/sictmws/stops/ctmr4'));
     });
   });
 }

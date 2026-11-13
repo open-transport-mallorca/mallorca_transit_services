@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
 import 'package:test/test.dart';
 import 'package:mallorca_transit_services/mallorca_transit_services.dart';
 
@@ -28,7 +25,7 @@ void main() {
       expect(station.dropoffType, isNull);
       expect(station.town, isNull);
 
-      final json = Station.toJson(station);
+      final json = station.toJson();
       expect(json, {
         ...stationJson,
         'pickupType': null,
@@ -54,7 +51,7 @@ void main() {
       final station = Station.fromJson(stationJson);
       expect(station.town, 'sa Coma');
 
-      expect(Station.toJson(station), stationJson);
+      expect(station.toJson(), stationJson);
       expect(station.toString(), contains('town: sa Coma'));
     });
 
@@ -71,8 +68,8 @@ void main() {
         'dropoffType': 0
       });
       expect(dischargeOnly.town, 'sa Coma');
-      expect(dischargeOnly.pickupType, 1);
-      expect(dischargeOnly.dropoffType, 0);
+      expect(dischargeOnly.pickupType, PickupDropoffType.notAvailable);
+      expect(dischargeOnly.dropoffType, PickupDropoffType.regular);
       expect(dischargeOnly.isDischargeOnly, isTrue);
       expect(dischargeOnly.isPickupOnly, isFalse);
 
@@ -99,145 +96,39 @@ void main() {
       expect(normal.isPickupOnly, isFalse);
     });
 
-    // Test getLines method for successful response
-    test('getLines should return a list of RouteLines for a valid station code',
-        () async {
-      final mockClient = MockClient((request) async {
-        final linesResponse = jsonEncode({
-          'lines': [
-            {'cod': '1'},
-            {'cod': '2'}
-          ]
-        });
+    test('fromJson parses the arranged types and keeps their values', () {
+      final json = {
+        'cod': '1',
+        'id': 1,
+        'lat': 0.0,
+        'lon': 0.0,
+        'nam': 'Arranged',
+        'ref': null,
+        'parent': null,
+        'pickupType': 2,
+        'dropoffType': 3
+      };
 
-        return http.Response(linesResponse, 200);
-      });
+      final station = Station.fromJson(json);
 
-      final mockRouteLineClient = MockClient((request) async {
-        final routeLineResponse = jsonEncode({
-          'act': true,
-          'cod': '1',
-          'id': 1,
-          'nam': 'Route Line 1',
-          'color': '#FFFFFF',
-          'typ': 1,
-        });
-
-        return http.Response(routeLineResponse, 200);
-      });
-
-      RouteLinesApi.httpClient = mockRouteLineClient;
-      StationsApi.httpClient = mockClient;
-
-      final lines = await StationsApi.getLines('123');
-      expect(lines.length, 2);
-      expect(lines[0].name, 'Route Line 1');
+      expect(station.pickupType, PickupDropoffType.phoneAgency);
+      expect(station.dropoffType, PickupDropoffType.coordinateWithDriver);
+      expect(station.isDischargeOnly, isFalse);
+      expect(station.isPickupOnly, isFalse);
+      expect(station.toJson(), json);
     });
 
-    // Test getLines method for invalid station code
-    test('getLines should throw FormatException for invalid station code',
-        () async {
-      final mockClient = MockClient((request) async {
-        return http.Response('Invalid station code', 400);
+    test('fromJson reads an unexpected value as unknown', () {
+      final station = Station.fromJson({
+        'cod': '1',
+        'id': 1,
+        'lat': 0.0,
+        'lon': 0.0,
+        'nam': 'Odd',
+        'pickupType': 7
       });
 
-      StationsApi.httpClient = mockClient;
-
-      expect(
-        () async => await StationsApi.getLines('999'),
-        throwsA(isA<FormatException>()),
-      );
-    });
-
-    // Test fromId method for successful response
-    test('fromId should return a Station for a valid id', () async {
-      final mockClient = MockClient((request) async {
-        final stationResponse = jsonEncode({
-          'cod': '123',
-          'id': 456,
-          'lat': 37.7749,
-          'lon': -122.4194,
-          'nam': 'Sample Station',
-          'ref': 'Reference',
-          'parent': 'Palma'
-        });
-
-        return http.Response(stationResponse, 200);
-      });
-
-      StationsApi.httpClient = mockClient;
-
-      final station = await StationsApi.fromId(456);
-      expect(station.code, '123');
-      expect(station.id, 456);
-      expect(station.lat, 37.7749);
-      expect(station.long, -122.4194);
-      expect(station.name, 'Sample Station');
-      expect(station.ref, 'Reference');
-      expect(station.town, 'Palma');
-    });
-
-    // Test fromId method for invalid id
-    test('fromId should throw an exception for invalid id', () async {
-      final mockClient = MockClient((request) async {
-        return http.Response('Station not found', 404);
-      });
-
-      StationsApi.httpClient = mockClient;
-
-      expect(
-        () async => await StationsApi.fromId(999),
-        throwsA(isA<Exception>()),
-      );
-    });
-
-    // Test getAllStations method for successful response
-    test('getAllStations should return a list of Stations', () async {
-      final mockClient = MockClient((request) async {
-        final stationsResponse = jsonEncode({
-          'stopsInfo': [
-            {
-              'cod': '123',
-              'id': 456,
-              'lat': 37.7749,
-              'lon': -122.4194,
-              'nam': 'Station 1',
-              'ref': 'Ref 1'
-            },
-            {
-              'cod': '789',
-              'id': 101,
-              'lat': 37.7750,
-              'lon': -122.4195,
-              'nam': 'Station 2',
-              'ref': 'Ref 2'
-            }
-          ]
-        });
-
-        return http.Response(stationsResponse, 200);
-      });
-
-      StationsApi.httpClient = mockClient;
-
-      final stations = await StationsApi.getAllStations(count: 2);
-      expect(stations.length, 2);
-      expect(stations[0].name, 'Station 1');
-      expect(stations[1].name, 'Station 2');
-    });
-
-    // Test getAllStations method for a failure scenario
-    test('getAllStations should throw an exception on failure', () async {
-      final mockClient = MockClient((request) async {
-        return http.Response('Error fetching stations', 500);
-      });
-
-      StationsApi.httpClient = mockClient;
-
-      expect(
-        () async => await StationsApi.getAllStations(),
-        throwsA(isA<Exception>()),
-      );
+      expect(station.pickupType, PickupDropoffType.unknown);
     });
   });
 }

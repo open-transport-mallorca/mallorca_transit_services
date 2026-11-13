@@ -32,10 +32,10 @@ void main() {
       final routeStationInfo = RouteStationInfo.fromJson(json);
 
       // Test passengers
-      expect(routeStationInfo.passangers.inBus, 10);
-      expect(routeStationInfo.passangers.totalCapacity, 50);
-      expect(routeStationInfo.passangers.seatedCapacity, 30);
-      expect(routeStationInfo.passangers.standingCapacity, 20);
+      expect(routeStationInfo.passengers!.inBus, 10);
+      expect(routeStationInfo.passengers!.totalCapacity, 50);
+      expect(routeStationInfo.passengers!.seatedCapacity, 30);
+      expect(routeStationInfo.passengers!.standingCapacity, 20);
 
       // Test stops
       expect(routeStationInfo.stops.length, 2);
@@ -73,8 +73,8 @@ void main() {
       final routeStationInfo = RouteStationInfo.fromJson(json);
 
       // Test passengers
-      expect(routeStationInfo.passangers.inBus, 10);
-      expect(routeStationInfo.passangers.totalCapacity, 50);
+      expect(routeStationInfo.passengers!.inBus, 10);
+      expect(routeStationInfo.passengers!.totalCapacity, 50);
 
       // Test stops
       expect(routeStationInfo.stops, isEmpty);
@@ -100,11 +100,12 @@ void main() {
       final routeStationInfo = RouteStationInfo.fromJson(json);
 
       // Test passengers
-      expect(routeStationInfo.passangers.inBus, 10); // Default value
-      expect(routeStationInfo.passangers.totalCapacity, 50); // Default value
-      expect(routeStationInfo.passangers.seatedCapacity, null); // Default value
+      expect(routeStationInfo.passengers!.inBus, 10); // Default value
+      expect(routeStationInfo.passengers!.totalCapacity, 50); // Default value
       expect(
-          routeStationInfo.passangers.standingCapacity, null); // Default value
+          routeStationInfo.passengers!.seatedCapacity, null); // Default value
+      expect(
+          routeStationInfo.passengers!.standingCapacity, null); // Default value
 
       // Test stops
       expect(routeStationInfo.stops.length, 1);
@@ -202,7 +203,7 @@ void main() {
       expect(info.position!.tripId, 9795766);
 
       expect(info.stops.single.stopCode, '65002');
-      expect(info.passangers.inBus, 37);
+      expect(info.passengers!.inBus, 37);
     });
 
     test('fromJson reads null for an absent tripId and position', () {
@@ -213,6 +214,15 @@ void main() {
 
       expect(info.tripId, isNull);
       expect(info.position, isNull);
+    });
+
+    test('fromJson reads null passengers for a capacity of 0', () {
+      final info = RouteStationInfo.fromJson({
+        'bus': {'pas': 0, 'cap': 0, 'cap_seated': 0, 'cap_standing': 0},
+        'stops': []
+      });
+
+      expect(info.passengers, isNull);
     });
   });
 
