@@ -1,4 +1,4 @@
-import 'package:mallorca_transit_services/src/tib/models/html_text.dart';
+import 'package:mallorca_transit_services/src/shared/html_text.dart';
 
 /// A service warning, e.g. a stop moved because of roadworks.
 class TransitWarning {
